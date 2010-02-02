@@ -23,7 +23,20 @@
   year      = {1991},
   pages     = {237-268},
   ee        = {http://doi.acm.org/10.1145/103135.103138},
-  bibsource = {DBLP, http://dblp.uni-trier.de}
+  bibsource = {DBLP, http://dblp.uni-trier.de},
+  abstract = {Statically typed programming languages allow earlier error checking, better enforcement of
+disciplined programming styles, and the generation of more efficient object code than languages
+where all type consistency checks are performed at run time. However, even in statically typed
+languages, there is often the need to deal with data whose type cannot be determined at compile
+time. To handle such situations safely, we propose to add a type Dynamic whose values are
+pairs of a value v and a type tag T, where v has the type denoted by T. Instances of Dynamic
+are built with an explicit tagging construct and inspected with a type safe typecase construct.
+This paper explores the syntax, operational semantics, and denotational semantics of a simple
+language that includes the type Dynamic. We give examples of how dynamically typed values
+can be used in programming. Then we discuss an operational semantics for our language and
+obtain a soundness theorem, We present two formulations of the denotational semantics of this
+language and relate them to the operational semantics. Finally, we consider the implications of
+polymorphism and some implementation issues.}
 }
 
 @article{Abadi1995DynamicPolymorphic,
@@ -37,7 +50,64 @@
   number    = {1},
   year      = {1995},
   pages     = {111-130},
-  bibsource = {DBLP, http://dblp.uni-trier.de}
+  bibsource = {DBLP, http://dblp.uni-trier.de},
+  abstract = {Dynamic types are sometimes used to palliate deficien­ 
+cies in languages with static type systems. They can be 
+used instead of polymorphic types, for example, to build 
+heterogeneous lists; they are also exploited to simu­ 
+late object­oriented techniques safely in languages that 
+lack them, as when emulating methods with procedures. 
+But dynamic types are of independent value, even when 
+polymorphic types and objects are available. They pro­ 
+vide a solution to a kind of computational incomplete­ 
+ness inherent to statically­typed languages, offering, for 
+example, storage of persistent data, inter­process com­ 
+munication, type­dependent functions such as print, 
+and the eval function. 
+Hence, there are situations in programming where 
+one would like to use dynamic types even in the pres­ 
+ence of arbitrarily advanced type features. In this pa­ 
+per we investigate the interplay of dynamic typing with 
+polymorphism. Our study extends earlier work (see [1]) 
+in allowing polymorphism, but keeps the same basic 
+language constructs (dynamic and typecase) and the 
+same style. 
+The interaction of polymorphismand dynamic types 
+gives rise to problems in binding type variables. We 
+find that these problems can be more clearly addressed 
+in languages with explicit polymorphism. Even then, 
+we encounter some perplexing difficulties (as indicated 
+in [1]). In particular, there is no unique way to match 
+the type tagging a dynamic value with a typecase pat­ 
+tern. Our solution consists in constraining the syntax 
+of typecase patterns, providing static guarantees of 
+unique solutions. The examples we have examined so 
+far suggest that our restriction is not an impediment in 
+practice. This solution applies also to languages with 
+abstract data types, and it extends to languages with 
+subtyping. 
+Drawing from the experience with explicit polymor­ 
+phism, we consider languages with implicit polymor­ 
+phism in the ML style. The same ideas can be used, 
+with some interesting twists. In particular, we are led 
+to introduce tuple variables, which stand for tuples of 
+type variables. 
+In addition to [1], several recent studies have con­ 
+sidered languages with dynamic types [14, 17, 23]. The 
+work most relevant to ours is that of Leroy and Mauny, 
+who define and investigate two extensions of ML with 
+dynamic types. We compare their designs to ours in 
+section 6. 
+Section 2 is a brief review of dynamic typing in 
+simply­typed languages, based on [1]. Section 3 con­ 
+siders the general case of adding dynamic typing to a 
+language with higher­order polymorphism [11]. An al­ 
+gorithmic formulation of the general framework is ob­ 
+tained in section 3.5 by restricting polymorphism to the 
+second order and placing conditions on the patters used 
+in typecase expressions. Sections 4 and 5 discuss ab­ 
+stract data types and subtyping, respectively. Section 6 
+deals with a language with implicit polymorphism. }
 }
 
 @inproceedings{Leroy1991Dynamics,
@@ -48,7 +118,12 @@
   year      = {1991},
   pages     = {406-426},
   crossref  = {DBLP:conf/fpca/1991},
-  bibsource = {DBLP, http://dblp.uni-trier.de}
+  bibsource = {DBLP, http://dblp.uni-trier.de},
+  abstract = {Objects with dynamic types allow the integration of operations that essentially require
+run-time type-checking into statically-typed languages. This paper presents two extensions of
+the ML language with dynamics, based on what has been done in the CAML implementation
+of ML, and discusses their usefulness. The main novelty of this work is the combination of
+dynamics with polymorphism.}
 }
 
 @inproceedings{Gray2005FineGrained,
@@ -61,5 +136,21 @@
   pages     = {231-245},
   ee        = {http://doi.acm.org/10.1145/1094811.1094830},
   crossref  = {DBLP:conf/oopsla/2005},
-  bibsource = {DBLP, http://dblp.uni-trier.de}
+  bibsource = {DBLP, http://dblp.uni-trier.de},
+  abstract = {As a value ?ows across the boundary between interoperat-
+ing languages, it must be checked and converted to ?t the
+types and representations of the target language. For simple
+forms of data, the checks and coercions can be immediate;
+for higher order data, such as functions and objects, some
+must be delayed until the value is used in a particular way.
+Typically, these coercions and checks are implemented by an
+ad-hoc mixture of wrappers, re?ection, and dynamic predi-
+cates. We observe that 1) the wrapper and re?ection oper-
+ations ?t the pro?le of mirrors, 2) the checks correspond to
+contracts, and 3) the timing and shape of mirror operations
+coincide with the timing and shape of contract operations.
+Based on these insights, we present a new model of interop-
+erability that builds on the ideas of mirrors and contracts,
+and we describe an interoperable implementation of Java
+and Scheme that is guided by the model.}
 }
