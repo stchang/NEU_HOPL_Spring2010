@@ -51,63 +51,7 @@ polymorphism and some implementation issues.}
   year      = {1995},
   pages     = {111-130},
   bibsource = {DBLP, http://dblp.uni-trier.de},
-  abstract = {Dynamic types are sometimes used to palliate deficien­ 
-cies in languages with static type systems. They can be 
-used instead of polymorphic types, for example, to build 
-heterogeneous lists; they are also exploited to simu­ 
-late object­oriented techniques safely in languages that 
-lack them, as when emulating methods with procedures. 
-But dynamic types are of independent value, even when 
-polymorphic types and objects are available. They pro­ 
-vide a solution to a kind of computational incomplete­ 
-ness inherent to statically­typed languages, offering, for 
-example, storage of persistent data, inter­process com­ 
-munication, type­dependent functions such as print, 
-and the eval function. 
-Hence, there are situations in programming where 
-one would like to use dynamic types even in the pres­ 
-ence of arbitrarily advanced type features. In this pa­ 
-per we investigate the interplay of dynamic typing with 
-polymorphism. Our study extends earlier work (see [1]) 
-in allowing polymorphism, but keeps the same basic 
-language constructs (dynamic and typecase) and the 
-same style. 
-The interaction of polymorphismand dynamic types 
-gives rise to problems in binding type variables. We 
-find that these problems can be more clearly addressed 
-in languages with explicit polymorphism. Even then, 
-we encounter some perplexing difficulties (as indicated 
-in [1]). In particular, there is no unique way to match 
-the type tagging a dynamic value with a typecase pat­ 
-tern. Our solution consists in constraining the syntax 
-of typecase patterns, providing static guarantees of 
-unique solutions. The examples we have examined so 
-far suggest that our restriction is not an impediment in 
-practice. This solution applies also to languages with 
-abstract data types, and it extends to languages with 
-subtyping. 
-Drawing from the experience with explicit polymor­ 
-phism, we consider languages with implicit polymor­ 
-phism in the ML style. The same ideas can be used, 
-with some interesting twists. In particular, we are led 
-to introduce tuple variables, which stand for tuples of 
-type variables. 
-In addition to [1], several recent studies have con­ 
-sidered languages with dynamic types [14, 17, 23]. The 
-work most relevant to ours is that of Leroy and Mauny, 
-who define and investigate two extensions of ML with 
-dynamic types. We compare their designs to ours in 
-section 6. 
-Section 2 is a brief review of dynamic typing in 
-simply­typed languages, based on [1]. Section 3 con­ 
-siders the general case of adding dynamic typing to a 
-language with higher­order polymorphism [11]. An al­ 
-gorithmic formulation of the general framework is ob­ 
-tained in section 3.5 by restricting polymorphism to the 
-second order and placing conditions on the patters used 
-in typecase expressions. Sections 4 and 5 discuss ab­ 
-stract data types and subtyping, respectively. Section 6 
-deals with a language with implicit polymorphism. }
+  abstract = {There are situations in programming where some dynamic typing is needed, even in the presence of advanced static type systems. We investigate the interplay of dynamic types with other advanced type constructions, discussing their integration into languages with explicit polymorphism (in the style of system F), implicit polymorphism (in the style of ML), abstract data types, and subtyping.}
 }
 
 @inproceedings{Leroy1991Dynamics,
@@ -153,4 +97,17 @@ Based on these insights, we present a new model of interop-
 erability that builds on the ideas of mirrors and contracts,
 and we describe an interoperable implementation of Java
 and Scheme that is guided by the model.}
+}
+
+@article{MacQueen1986Ideal,
+  author    = {David B. MacQueen and
+               Gordon D. Plotkin and
+               Ravi Sethi},
+  title     = {An Ideal Model for Recursive Polymorphic Types},
+  journal   = {Information and Control},
+  volume    = {71},
+  number    = {1/2},
+  year      = {1986},
+  pages     = {95-130},
+  bibsource = {DBLP, http://dblp.uni-trier.de}
 }
