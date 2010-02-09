@@ -36,7 +36,7 @@
   volume    = {13},
   number    = {2},
   year      = {1991},
-  pages     = {237-268},
+  pages     = {237-268}
 }
 \end{verbatim}
 
@@ -58,28 +58,30 @@ polymorphism and some implementation issues.
 
 \subsubsection*{Summary}
 
-A \Dynamic value is essentially an infinite disjoint union. Previous languages such as Simula-67, CLU, Cedar/Mesa, Modula-2+, and Modula-3 have similar constructs but the behavior of the construct has never been formally specified. The main contribution of this paper is a formal specification of \Dynamic values. 
+A \Dynamic value is essentially an infinite disjoint union. Previous languages such as Simula-67, CLU, Cedar/Mesa, Modula-2+, and Modula-3 have similar constructs but the behavior of the construct has never been formally specified. The main contribution of this paper is a formal specification of a language with \Dynamic values. 
 
-The authors add \Dynamic values to the simply-typed lambda calculus, along with a \dynamic construct (lowercase ``d'') for creating \Dynamic values, and a \typecase construct for inspecting them. \Dynamic values are a tuple $(v,T)$, where $v$ is a value and $T$ is its type. \typecase statements consist of a series of patterns of the form $(\vec{X})(x:T)\;e$ where $\vec{X}$ is a set of type variables, $x$ is a variable expression, and $T$ is a type expression that may contain the type variables in $\vec{X}$. If the \Dynamic value $(v,U)$ matches a pattern, then the result of the \typecase expression is the result of evaluating $e$ in an environment where the variable $x$ is bound to $v$. A matching is defined such that any type variables in $T$ can be used to represent any subexpression in the type $U$. If the \Dynamic value matches more than one pattern, then the first match is used. One thing to note is that the set of types that \Dynamic must handle cannot be computed statically because the \dynamic constructor can create new types at run time. For example:
+The authors add \Dynamic values to the simply-typed lambda calculus, along with a \dynamic construct (lowercase ``d'') for creating \Dynamic values, and a \typecase construct for inspecting them. \Dynamic values are a tuple $(v,T)$, where $v$ is a value and $T$ is its type. \typecase statements consist of a series of patterns of the form $(\vec{X})(x:T)\;e$ where $\vec{X}$ is a set of type variables, $x$ is a variable expression, and $T$ is a type expression that may contain the type variables in $\vec{X}$. If the \Dynamic value $(v,U)$ matches a pattern, then the result of the \typecase expression is the result of evaluating $e$ in an environment where the variable $x$ is bound to $v$. A matching is defined such that type variables in $T$ can be used to represent subexpressions in the type $U$. If a \Dynamic value matches more than one pattern, then the first match is used. One thing to note is that the set of types that \Dynamic must handle cannot be computed statically because the \dynamic constructor can create new types at run time. For example, in the function below, a new product type is created:
 
 \begin{verbatim}
-\dx:Dynamic.
-  typecase dx of
-    (X)(x:X) (dynamic (x,x) (X,X))
+\dy:Dynamic.
+  typecase dy of
+    (Y)(y:Y) (dynamic (y,y) Y x Y)
     else dx
   end
 \end{verbatim}
 
-The authors also give typechecking and evaluation rules for their language and prove the soundness of the type system. The authors also give a denotational semantics of their language and show that if an expression evaluates to a value in the operational semantics, then the meaning of the expression is equal to the meaning of the value in the domain they construct. In addition, the authors prove type soundness using the denotational semantics as well, where the main difficulty is in defining the meaning of \Dynamic. To aid them, the authors use the ideal model of types from MacQueen, Plotkin, and Sethi~\cite{MacQueen1986Ideal}. The authors conclude by briefly describing several possible extensions to their language, such as polymorphism and abstract data types, which they elaborate on in a subsequent paper~\cite{Abadi1995DynamicPolymorphic}.
+The authors give typechecking and evaluation rules for their language and prove the soundness of the type system. The authors also give a denotational semantics for their language and show that if an expression evaluates to a value in the operational semantics, then the meaning of the expression is equal to the meaning of the value in the denotational semantics. In addition, the authors prove type soundness using the denotational semantics as well, where the main difficulty is in defining the meaning of \Dynamic. To address the difficulty, the authors use the ideal model of types from MacQueen, Plotkin, and Sethi~\cite{MacQueen1986Ideal}. The authors conclude by briefly describing several possible extensions to their language, such as polymorphism and abstract data types, which they elaborate on in a subsequent paper~\cite{Abadi1995DynamicPolymorphic}.
 
 \subsubsection*{Situations where \Dynamic can be used:}
 \begin{itemize}
-	\item multi-language programs
-	\item accessing persistent data (picking)
+	\item multi-language programs where one language is dynamically typed
+	\item accessing persistent data (pickling)
 	\item inter-process communication, RPC
 	\item giving a type to functions like \texttt{eval} or \texttt{print} function where the type of the input or output is not known
 	\item the authors also show that \Dynamic can be used to implement a fixpoint operator in the simply-typed lambda calculus by hiding certain expressions inside a \Dynamic value
 \end{itemize}
+
+
 
 
 
@@ -94,7 +96,7 @@ The authors also give typechecking and evaluation rules for their language and p
   volume    = {5},
   number    = {1},
   year      = {1995},
-  pages     = {111-130},
+  pages     = {111-130}
 }
 \end{verbatim}
 
@@ -104,7 +106,14 @@ There are situations in programming where some dynamic typing is needed, even in
 \subsubsection*{Summary}
 The main contribution of this work is incorporating polymorphism into a language with \Dynamic values. The authors first add explicit polymorphism to their language but encounter a problem where some \Dynamic values cannot be matched uniquely using \typecase. The authors work around the problem by restricting the allowable \typecase patterns. The authors then show that their solution can also be used to add abstract data types and subtyping to their language. They also explore implicit polymorphism and compare their work to that of Leroy and Mauny~\cite{Leroy1991Dynamics}.
 
-Adding explicit polymorphism to a language with \Dynamic requires allowing higher-order variables in a \typecase pattern. Instead of being able to represent only type expressions, the pattern type variables must be allowed to represent abstractions over type expressions (ie - type operators). The authors add this new \typecase construct to System $F_\omega$. However, allowing unconstrained type operators leads to the problem where some \typecase patterns may not have unique matches for some types. For example, the pattern $F(\mathtt{Int})$, where $F$ is a type operator, can match the type \texttt{Int} by assigning $F$ to be either $\Lambda X.X$, $\Lambda X.\mathtt{Int}$. To address this problem, the only allowable patterns are those that can uniquely match every type in at most one way (the authors call this property definiteness). Requiring definiteness introduces a new problem of how to incorporate the requirement into the typechecker, since there is not even a decidable algorithm to match higher-order patterns to types. The authors address the second problem by restricting their language to second-order polymorphism (System $F$) and they make a reasonable argument that this restriction satisfies their requirements, although they do not give an explicit matching algorithm.
+Adding explicit polymorphism to a language with \Dynamic requires allowing higher-order type variables in a \typecase pattern. Instead of being able to represent only type expressions, the pattern type variables must be allowed to represent abstractions over type expressions (ie - type operators). The authors add this new \typecase construct to System $F_\omega$. However, allowing unconstrained type operators leads to the problem where some \typecase patterns may not have unique matches for some types. For example, the pattern $F(\mathtt{Int})$, where $F$ is a type operator, can match the type \texttt{Int} by assigning $F$ to be either $\Lambda X.X$, $\Lambda X.\mathtt{Int}$. To address this problem, the allowed patterns are constrained to those that can uniquely match every type in at most one way (the authors call this property definiteness). Requiring definiteness introduces a new problem of how to incorporate the requirement into the typechecker, since there is not even a decidable algorithm to match higher-order patterns to types. The authors address the second problem by restricting their language to second-order polymorphism (System $F$) and they make a reasonable argument that this restriction satisfies their requirements, although they do not give an explicit matching algorithm.
+
+
+
+
+
+
+
 
 
 
@@ -115,7 +124,7 @@ Adding explicit polymorphism to a language with \Dynamic requires allowing highe
   title     = {Dynamics in ML},
   booktitle = {FPCA},
   year      = {1991},
-  pages     = {406-426},
+  pages     = {406-426}
 }
 \end{verbatim}
 
@@ -123,8 +132,13 @@ Adding explicit polymorphism to a language with \Dynamic requires allowing highe
 Objects with dynamic types allow the integration of operations that essentially require run-time type-checking into statically-typed languages. This paper presents two extensions of the ML language with dynamics, based on what has been done in the CAML implementation of ML, and discusses their usefulness. The main novelty of this work is the combination of dynamics with polymorphism.
 
 \subsubsection*{Summary}
+The contribution of this work is adding \Dynamic values to a language with ML-style (implicit) polymorphism. The authors present two possible ways to add \Dynamic values, the first of which is fully implemented in CAML, and the second of which is prototyped in CAML. The authors also give a calculus for their new language and they give a soundness proof for the type system. The authors also discuss various implementation issues they faced.
 
+One difference between the first implementation in this paper and the caluclus of Abadi et. al~\cite{Abadi1991Dynamic,Abadi1995DynamicPolymorphic} is that in the ML implementation, the parameter to the \dynamic creation construct does not need to be explicitly annotated with a type (because of type inference in ML). However, this places restrictions on when and what \Dynamic values are allowed to be created. Specifically, the parameter to \dynamic can only be values whose types are closed. Polymorphic types are still ok, so (\dynamic \verb!\x.x!) is acceptable, but the dynamic produced by \verb!\x.(dynamic x)! is not ok because the type of \texttt{x} is unknown at compile time. The typechecker must be modifed to reject expressions like \verb!\x.(dynamic x)! because the ML typechecker would infer a principal type of $\alpha \rightarrow \; \mathtt{Dynamic}$, which is not valid. It is interesting to note that the type system with \Dynamic added no longer has the principal type property.
 
+Inspection of \Dynamic values is also different in the (first) language presented by the paper. The authors do not use a separate elimination construct like Abadi, et al.'s \typecase, but instead use ML's existing pattern matching features.  Also, the patterns in this paper are less expressive than that of~\cite{Abadi1995DynamicPolymorphic}, since this paper only allows the usual ML-style types, where type quantifiers are only allowed in the top level (ie - an ML type scheme). A type pattern in this paper will match any type in a \Dynamic value that is more general than the pattern type. For example, a pattern \verb!dynamic(x:int list)! will match a \Dynamic value that contains the empty list (which has type $\forall \alpha.\alpha$ \verb!list!) and a pattern \verb!dynamic(f : !$\alpha \rightarrow \alpha)$ will match any \Dynamic value with internal type that is $\alpha \rightarrow \alpha$ or something more general like $\alpha \rightarrow \beta$. However, it's important to note that the type variables in the pattern are not normal pattern variables that can be instantiated during pattern matching (this is different from patterns in the \typecase construct of~\cite{Abadi1995DynamicPolymorphic}). So a pattern \verb!dynamic(!$x:\alpha \; \mathtt{list})$ will only match the empty list. Therefore, in a case expression on a \Dynamic value, the more general type patterns must come first, since they will match fewer types.
+
+The authors acknowledge the limitations of their first type system that requires closedness of \dynamic parameters. For example, in a \texttt{print} function, the first language cannot express a pattern that matches any product type. To address this limitation, he authors propose extend their language and type system to allow existential types.
 
 
 
@@ -137,7 +151,7 @@ Objects with dynamic types allow the integration of operations that essentially 
   title     = {Fine-grained interoperability through mirrors and contracts},
   booktitle = {OOPSLA},
   year      = {2005},
-  pages     = {231-245},
+  pages     = {231-245}
 }
 \end{verbatim}
 
