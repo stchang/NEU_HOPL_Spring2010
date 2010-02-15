@@ -111,9 +111,8 @@ Adding explicit polymorphism to a language with \Dynamic requires allowing highe
 The authors also present a version of their language with implicit polymorphism. With implicit polymorphism a type tag does not need to be a parameter to \dynamic because it (the most general type) can be inferred. The implicit polymorphic language also allows ``tag instantiation'' which allows \Dynamic values with more general type tags to match patterns with a less general type. For example the type tag $\mathtt{\forall (A,B).(A \rightarrow B)\rightarrow (A \rightarrow B)}$ should match the less general type pattern $\mathtt{\forall (A).(A \rightarrow A)\rightarrow (A \rightarrow A)}$. The language also allows second-order pattern type variables, which means that the type variables in the pattern can be type operators. So the tag $\mathtt{\forall(A).(A\times A)\rightarrow A}$ matches the patern $\mathtt{\{F\}f:\forall (A).F(A)\rightarrow A}$ because the second-order type variable $F$ gets instantiated to $\mathtt{\Lambda A.A\times A}$. But having both tag instantiation and second-order pattern variables can cause problems because the pattern variable could depend on more variables than are in the pattern because the tag could be more general. For example according to tag instantiation, the tag $\mathtt{\forall(A,B).(A\times B)\rightarrow A}$ should match the pattern $\mathtt{\{F\}f:\forall (A).F(A)\rightarrow A}$ but it's not clear how to instantiate $F$ because it depends on $B$ (ie - $\mathtt{F = \Lambda A.A\times ??}$). Solution is to capture all these ``free variables'' that the pattern variable depends on in a tuple (the exact variables in the tuple cannot be statically determined). So the pattern above should be written $\mathtt{\{F\}f:\forall (A).F(P;A)\rightarrow A}$ where $P$ is the tuple. \texttt{P} would be a tuple of one variable, (\texttt{B}), for a \Dynamic value with tag $\mathtt{\forall(A,B).(A\times B)\rightarrow A}$.
 
 
-
-
-
+\subsubsection*{Comparison to Leroy and Mauny~\cite{Leroy1991Dynamics}}
+Leroy and Mauny (LM) use existential quantifiers instead of pattern variables (ACPR) but pattern variables are more powerful. All patterns in LM can be expressed by the patterns in ACPR but the opposite is not true. Because quantifiers are in ``linear order'', LM cannot have parallel dependencies on more than one pattern variable, like in the ACPR pattern $\mathtt{\{F,G\} \; (v:\forall (P,A,B)T(A,F(P;A),B,G(P;B)))}$.
 
 
 
@@ -129,10 +128,12 @@ The authors also present a version of their language with implicit polymorphism.
 }
 \end{verbatim}
 
+\newcommand{\mlcode}[1]{$\mathtt{#1}$}
+
 \subsubsection*{Abstract}
 Objects with dynamic types allow the integration of operations that essentially require run-time type-checking into statically-typed languages. This paper presents two extensions of the ML language with dynamics, based on what has been done in the CAML implementation of ML, and discusses their usefulness. The main novelty of this work is the combination of dynamics with polymorphism.
 
-\subsubsection*{Summary}
+\subsubsection*{Summary\_orig}
 The contribution of this work is adding \Dynamic values to a language with ML-style (implicit) polymorphism. The authors present two possible ways to add \Dynamic values, the first of which is fully implemented in CAML, and the second of which is prototyped in CAML. The authors also give a calculus for their new language and they give a soundness proof for the type system. The authors also discuss various implementation issues they faced.
 
 One difference between the first implementation in this paper and the caluclus of Abadi et. al~\cite{Abadi1991Dynamic,Abadi1995DynamicPolymorphic} is that in the ML implementation, the parameter to the \dynamic creation construct does not need to be explicitly annotated with a type (because of type inference in ML). However, this places restrictions on when and what \Dynamic values are allowed to be created. Specifically, the parameter to \dynamic can only be values whose types are closed. Polymorphic types are still ok, so (\dynamic \verb!\x.x!) is acceptable, but the dynamic produced by \verb!\x.(dynamic x)! is not ok because the type of \texttt{x} is unknown at compile time. The typechecker must be modifed to reject expressions like \verb!\x.(dynamic x)! because the ML typechecker would infer a principal type of $\alpha \rightarrow \; \mathtt{Dynamic}$, which is not valid. It is interesting to note that the type system with \Dynamic added no longer has the principal type property.
@@ -140,6 +141,51 @@ One difference between the first implementation in this paper and the caluclus o
 Inspection of \Dynamic values is also different in the (first) language presented by the paper. The authors do not use a separate elimination construct like Abadi, et al.'s \typecase, but instead use ML's existing pattern matching features.  Also, the patterns in this paper are less expressive than that of~\cite{Abadi1995DynamicPolymorphic}, since this paper only allows the usual ML-style types, where type quantifiers are only allowed in the top level (ie - an ML type scheme). A type pattern in this paper will match any type in a \Dynamic value that is more general than the pattern type. For example, a pattern \verb!dynamic(x:int list)! will match a \Dynamic value that contains the empty list (which has type $\forall \alpha.\alpha$ \verb!list!) and a pattern \verb!dynamic(f : !$\alpha \rightarrow \alpha)$ will match any \Dynamic value with internal type that is $\alpha \rightarrow \alpha$ or something more general like $\alpha \rightarrow \beta$. However, it's important to note that the type variables in the pattern are not normal pattern variables that can be instantiated during pattern matching (this is different from patterns in the \typecase construct of~\cite{Abadi1995DynamicPolymorphic}). So a pattern \verb!dynamic(!$x:\alpha \; \mathtt{list})$ will only match the empty list. Therefore, in a case expression on a \Dynamic value, the more general type patterns must come first, since they will match fewer types.
 
 The authors acknowledge the limitations of their first type system that requires closedness of \dynamic parameters. For example, in a \texttt{print} function, the first language cannot express a pattern that matches any product type. To address this limitation, he authors propose extend their language and type system to allow existential types.
+
+
+
+\subsubsection*{Summary}
+The paper adds \Dynamic values to ML. A \Dynamic value is a pair consisting of a value and its type. The (\dynamic \texttt{e}) construct creates a \Dynamic value by evaluating \texttt{e} and inferring its type, and then pairing the two results together. \Dynamic values are inspected using a new ML pattern \texttt{dynamic(p:T)}, where \texttt{p} is pattern and \texttt{T} is a type.
+
+The paper presents two versions of ML extended with \Dynamic values, one that allows \Dynamic values to be created from expressions of closed types only and one that allows \Dynamic values to be created from expressions with non-closed types.
+
+\paragraph{Closed-type \Dynamic values}
+In the first extension, the \dynamic constructor can only be applied to terms with closed types. For example, \mlcode{dynamic(fn \; x \rightarrow x)} is allowed because \mlcode{fn \; x \rightarrow x} has type \mlcode{\forall\alpha.\alpha\rightarrow\alpha}. However, the \dynamic in the body of \mlcode{fn \; x \rightarrow \dynamic \; x}, where \texttt{x} has an (ungeneralized) type \mlcode{\alpha}, which is not closed. In order for such an expression to be properly evaluated, the type of \mlcode{\alpha} needs to be passed at run-time (and since functions can be nested, even functions that do not create \Dynamic values would need such type information). Allowing \dynamic to be used with non-closed types also destroys the parametricity properties of ML. For example, all functions \mlcode{f:\forall\alpha.\alpha \; list \rightarrow\alpha \; list} must have the property that \mlcode{map \; g \; (f \; l) = f\; (map \; g \; l)}, but the following function does not have this property:
+
+\begin{verbatim}
+let f = fn l ->
+  match (dynamic l) with
+    dynamic(m:int list) -> reverse l 
+  | d -> l
+    
+\end{verbatim}
+
+An ML \dynamic pattern matches any \Dynamic value whose internal type is more general than the expected type. Therefore the value \dynamic \mlcode{empty} with internal type \mlcode{\forall\alpha.\alpha\;list} matches the pattern \mlcode{dynamic(x:int\;list)}. \dynamic type patterns can require a polymorphic type but these will match less \Dynamic values than patterns with non-polymorphic types because the type variables in the polymorphic pattern are universally quantified by the pattern and cannot be instantiated during matching. For example the pattern \mlcode{dynamic(x:\alpha\;list)} matches only the empty list and not a \Dynamic value containing a list of a specific type. Also, this means that polymorphic \dynamic patterns must appear before non-polymorphic \dynamic patterns in a case statement, otherwise the polymorphic patterns will never be matched.
+
+The paper presents a formal semantics for the core ML language extended with constructs for creating and inspecting \Dynamic values. The paper gives evaluation and typechecking rules for the language as well as a soundness theorem. In the typing rules, \Dynamic values are welled-typed if its internal value can be assigned a type scheme. Since type schemes can only represent closed type expressions, \Dynamic values created with a non-closed type are not well-typed and are rejected by the typechecker. Since ML's type system relies on type reconstruction, the paper also presents a type reconstruction algorithm for the language.
+
+\paragraph{Non-closed-type \Dynamic values}
+The paper
+
+
+
+\subsubsection*{Summary\_abrv}
+The paper adds \Dynamic values to ML. A \Dynamic value is a pair consisting of a value and its type. The (\dynamic \texttt{e}) construct creates a \Dynamic value by evaluating \texttt{e} and inferring its type, and then pairing the two results together. \Dynamic values are inspected using a new ML pattern \texttt{dynamic(p:T)}, where \texttt{p} is pattern and \texttt{T} is a type.
+
+The paper presents two versions of ML extended with \Dynamic values, one that allows \Dynamic values to be created from expressions of closed types only and one that allows \Dynamic values to be created from expressions with non-closed types.
+
+\paragraph{Closed-type \Dynamic values}
+In the first extension, the \dynamic constructor can only be applied to terms with closed types. For example, \mlcode{dynamic(fn \; x \rightarrow x)} is allowed because \mlcode{fn \; x \rightarrow x} has type \mlcode{\forall\alpha.\alpha\rightarrow\alpha}. However, the \dynamic in the body of \mlcode{fn \; x \rightarrow \dynamic \; x}, where \texttt{x} has an (ungeneralized) type \mlcode{\alpha}, which is not closed. 
+
+An ML \dynamic pattern matches any \Dynamic value whose internal type is more general than the expected type. Therefore the value \dynamic \mlcode{empty} with internal type \mlcode{\forall\alpha.\alpha\;list} matches the pattern \mlcode{dynamic(x:int\;list)}. \dynamic type patterns can require a polymorphic type but these will match less \Dynamic values than patterns with non-polymorphic types. This means that polymorphic \dynamic patterns must appear before non-polymorphic \dynamic patterns in a case statement, otherwise the polymorphic patterns will never be matched.
+
+The paper presents a formal semantics for the core ML language extended with constructs for creating and inspecting \Dynamic values. The paper gives evaluation and typechecking rules for the language as well as a soundness theorem. In the typing rules, \Dynamic values are welled-typed if its internal value can be assigned a type scheme. Since type schemes can only represent closed type expressions, \Dynamic values created with a non-closed type are not well-typed and are rejected by the typechecker. Since ML's type system relies on type reconstruction, the paper also presents a type reconstruction algorithm for the language.
+
+\paragraph{Non-closed-type \Dynamic values}
+The paper
+
+
+\subsubsection*{Evaluation}
 
 
 
