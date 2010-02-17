@@ -1,0 +1,125 @@
+% dynamic.tex
+
+\documentclass[12pt]{article}	% YOUR INPUT FILE MUST CONTAIN THESE
+\usepackage{url}
+\usepackage{graphicx}
+\oddsidemargin  -0.4in
+\evensidemargin 0.0in
+\textwidth      7in
+\headheight     -0.5in
+\topmargin      0.0in
+\textheight     9.0in
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{xspace}
+\usepackage{mathpartir}
+
+
+
+\begin{document}							% TWO LINES PLUS THE \end COMMAND AT
+															% THE END
+\newcommand{\Dynamic}{\texttt{Dynamic}\xspace}
+\newcommand{\typecase}{\texttt{typecase}\xspace}
+\newcommand{\dynamic}{\texttt{dynamic}\xspace}
+\newcommand{\wrong}{\texttt{wrong}\xspace}
+\newcommand{\deno}[1]{ \ensuremath{[\![#1]\!]} }
+\newcommand{\code}[1]{$\mathtt{#1}$}
+
+
+\title{Type Dynamic - Presentation Notes}
+\author{Stephen Chang}
+\date{2/26/2010}
+\maketitle
+
+\subsection*{Motivation}
+\begin{enumerate}
+	\item Static typecheckers have many advantages but sometimes dynamic typechecking is unavoidable. Type \Dynamic is about embedding dynamic typechecking within statically typed languages.
+	\item What static type to give to \code{eval:string\rightarrow\;??}
+	\item What static type to give to \code{pring:??\rightarrow\;string}
+	      Need to know type at runtime to dispatch proper type-specific print fn
+	\item What static type to give to \code{read:IO\rightarrow\;??}
+	      Can be from disk, another process, another computer over the network/internet
+	\item Multi-language programs
+\end{enumerate}
+
+\subsection*{Background/History}
+\begin{enumerate}
+	\item languages with disjoint union (finite): Algol-68, Pascal (tagged variant record)
+	\item language infinite disjoint union: Simula-67's subclass structure (INSPECT statement allows program to determine subclass of a value at run time)
+	\item languages with dynamic typing in static context: CLU (\code{any} type/force), Cedar/Mesa (REFANY/TYPECASE), Modula-2+, Modula-3 (from Cedar/Mesa) -- these languages wanted to support programming idioms from LISP
+	\item formalization of language with \Dynamic: Schaffert and Scheifler (1978) gave formal description and denotational semantics for CLU but did not give a soundness theorem -- also required every value to carry type tag at run time
+	\item ML had some proposals for adding \Dynamic but ultimately unpublished: Gordon (1980, personal communication), Mycroft (1983, draft)
+	\item languages with mechanisms for handling persistent data: Amber, Modula-2+ (pickling)
+\end{enumerate}
+
+\subsection*{Abadi, et al. (1989/1991) - Dynamic Typing in a Statically Typed Language}
+\begin{enumerate}
+	\item Introduce new datatype \Dynamic whose values pairs of value \texttt{v} and type tag \texttt{T} (so \Dynamic values carry type information at runtime) -- like an infinite disjoint union (sum type) -- allow values of different types to be manipulated uniformly
+	\item \code{(dynamic\;e:T)} construct creates \Dynamic values and \typecase construct eliminates
+	\item \typecase example:
+	\begin{verbatim}
+	tostring: Dynamic -> String
+	  \dv:Dynamic.
+	    typecase dv of
+	      (v:String) (string-append '"' v '"')
+	      (n:Nat) (natToStr n)
+	      (X,Y)(f:X -> Y) "<function>"
+	      (X,Y)(p:X x Y)
+	        (string-append "<" (tostring (dynamic (fst p):X) ","
+	                           (tostring (dynamic (snd p):Y) ">")
+	      (d:Dynamic) (string-append "dynamic" (tostring d)
+	      else "unknown"
+	    end
+	\end{verbatim}
+	nested \typecase example:
+	\begin{verbatim}
+	\df:Dynamic.\de:Dynamic.
+	  typecase df of
+	    (X,Y)(f:X -> Y)
+	      typecase de of
+	        (e:X) (dynamic (f e):Y)
+	        else (dynamic "Error":String)
+	      end
+	    else (dynamic "Error":String)
+	  end
+	\end{verbatim}
+	\item Contribution: formal description of language with \Dynamic values -- cbv simply-typed lambda calculus + \dynamic and \typecase
+	\item typecheck and eval rules for \dynamic:\\
+	\inferrule{\Gamma \vdash e:T}{\Gamma\vdash(\dynamic\;e:T):\Dynamic}
+	\inferrule{\vdash e \Rightarrow v}{\vdash(\dynamic\;e:T)\Rightarrow(\dynamic\;v:T)}
+	\item typecheck and eval rules for \typecase:\\
+	\inferrule{\Gamma \vdash e:\Dynamic \\\\ 
+	           \forall i,\forall\sigma\in Subst_{\vec{X_i}} \; \Gamma[x_i \leftarrow T_i\sigma]\vdash e_i\sigma:T \\\\
+	           \Gamma\vdash e_{else}:T}
+	          {\Gamma\vdash(\typecase\;e\;\texttt{of} \\\\
+	                        \ldots(\vec{X_i})(x_i:T_i)\;e_i\ldots\\\\
+	                        \texttt{else}\; e_{else}\\\\
+	                        \texttt{end}):T}\\
+	 \inferrule{\vdash\;e\Rightarrow(\dynamic\;w:T)\\\\
+	            \forall j<k.match(T,T_j) \textrm{fails}\\\\
+	            match(T,T_k) = \sigma\\\\
+	            \vdash e_k\sigma[x_k\leftarrow w]\Rightarrow v}
+	           {\vdash(\typecase\;e\;\texttt{of}\\\\
+	            \ldots(\vec{X_i})(x_i:T_i)\;e_i\ldots\\\\
+	            \texttt{else}\; e_{else}\\\\
+	            \texttt{end})\Rightarrow v}
+	 \inferrule{\vdash\;e\Rightarrow(\dynamic\;w:T)\\\\
+	            \forall k.match(T,T_k) \textrm{fails}\\\\
+	            \vdash e_{else}\Rightarrow v}
+	           {\vdash(\typecase\;e\;\texttt{of}\\\\
+	            \ldots(\vec{X_i})(x_i:T_i)\;e_i\ldots\\\\
+	            \texttt{else}\; e_{else}\\\\
+	            \texttt{end})\Rightarrow v}
+	\item Theorem: $\forall e, v, T$, if $\vdash e \Rightarrow v$ and $\vdash e:T$, then $v:T$\\
+	      Corollary: $\forall e, v, T$ if $\vdash e \Rightarrow v$ and $\vdash e:T$, then $v \neq$ \wrong (because \wrong is not well-typed)
+	\item Authors give denotational semantics -- difficulty is assigning meaning to \Dynamic values -- use ideal model of types and Banach Fixed Point theorem from MacQueen, Plotkin, Sethi (1986)
+	\item Typechecking is sound: If $e$ is well typed, then $\deno{e}_\rho \neq \wrong$ (for well-behaved $\rho$)\\
+	                             proved via: $\forall\Gamma,e,\rho,T$ ($\rho$ consistent with $\Gamma$ on $e$), if $\Gamma\vdash e:T$ then $\deno{e}_\rho \in \deno{T}$\\
+	      Evaluation is sound: If $\vdash e \Rightarrow v$, then $\deno{e} = \deno{v}$
+\end{enumerate}
+
+\bibliographystyle{acm}
+\bibliography{dynamic}
+
+
+\end{document} % THE INPUT FILE ENDS LIKE THIS
