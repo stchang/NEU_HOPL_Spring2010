@@ -13,6 +13,7 @@
 \usepackage{amsmath}
 \usepackage{xspace}
 \usepackage{mathpartir}
+\usepackage{alltt}
 
 
 
@@ -24,6 +25,7 @@
 \newcommand{\wrong}{\texttt{wrong}\xspace}
 \newcommand{\deno}[1]{ \ensuremath{[\![#1]\!]} }
 \newcommand{\code}[1]{$\mathtt{#1}$}
+\newcommand{\pair}[2]{ \ensuremath{\left\langle #1,#2 \right\rangle} }
 
 
 \title{Type Dynamic - Presentation Notes}
@@ -35,7 +37,7 @@
 \begin{enumerate}
 	\item Static typecheckers have many advantages but sometimes dynamic typechecking is unavoidable. Type \Dynamic is about embedding dynamic typechecking within statically typed languages.
 	\item What static type to give to \code{eval:string\rightarrow\;??}
-	\item What static type to give to \code{pring:??\rightarrow\;string}
+	\item What static type to give to \code{print:\;??\rightarrow\;string}
 	      Need to know type at runtime to dispatch proper type-specific print fn
 	\item What static type to give to \code{read:IO\rightarrow\;??}
 	      Can be from disk, another process, another computer over the network/internet
@@ -117,6 +119,55 @@
 	                             proved via: $\forall\Gamma,e,\rho,T$ ($\rho$ consistent with $\Gamma$ on $e$), if $\Gamma\vdash e:T$ then $\deno{e}_\rho \in \deno{T}$\\
 	      Evaluation is sound: If $\vdash e \Rightarrow v$, then $\deno{e} = \deno{v}$
 \end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Abadi, et al. (1995) Dynamic Typing in Polymorphic Languages
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection*{Abadi, et al. (1995) - Dynamic Typing in Polymorphic Languages}
+
+%% Explicit Polymorphism
+\subsubsection*{Explicit Polymorphism}
+\begin{enumerate}
+	\item Contribution: add explicit polymorphism to language with \Dynamic -- get type abstractions $(\Lambda)$
+	\item example:
+	\begin{alltt}
+	squarePolyFun = 
+	  \(\lambda\)df:Dynamic
+	    typecase df of
+	      (f:\(\forall\)Z.Z\(\rightarrow\)Int)
+	        \(\Lambda\)W.\(\lambda\)x:W.f[W](x)*f[W](x)
+	      else \(\Lambda\)W.\(\lambda\)x:W.0
+	\end{alltt}
+	\item need second-order pattern variables that can be type operators in \typecase, example:
+	\begin{alltt}
+	dynamicApply = 
+	  \(\lambda\)df:Dynamic.\(\lambda\)da:Dynamic.
+	    typecase fg of
+	      \{F,G\} (f:\(\forall\)Z.F(Z)\(\rightarrow\)G(Z))
+	        typecase da of
+	          \{W\} (a:F(W))
+	            dynamic( f[W](a):G(W) )
+	\end{alltt}
+	if \code{df = dynamic(\;\Lambda Z.\lambda x:Z\times Z.\pair{snd(x)}{fst(x)}:\ldots\;)} \\
+	and \code{da = dynamic(\pair{3}{4}:\ldots)} \\
+	then \code{F = \Lambda X.X \times X}, \code{G = \Lambda X.X \times X}, and \code{W = Int} \\
+	but if \code{df = dynamic(\;\Lambda Z.\lambda x:Z\rightarrow Z.x:\ldots\;)} \\
+	and \code{da = dynamic(\lambda x:Int.x:\ldots)} \\
+	then \code{F = \Lambda X.X \rightarrow X}, \code{G = \Lambda X.X\rightarrow X}, and \code{W = Int} \\
+	
+	\item Formally, \Dynamic values added to System $F_\omega$ (simply-typed lambda calculus + type abstractions + type operators)
+	\item Having higher order pattern variables in \typecase allows ambiguous matches - example: pattern \code{F(Int)} matches tag \code{Int} with either \code{F=\Lambda X.X} or \code{F=\Lambda X.Int}.
+	\item So patterns must be restricted so that they match any tag uniquely (this property is called definiteness) - restrict language to only second-order polymorphism
+	\item Authors go not give typing or evaluation rules for explicit polymorphism
+\end{enumerate}
+
+%% Implicit Polymorphism
+\subsubsection*{Implicit Polymorphism}
+\begin{enumerate}
+	\item
+
+\end{enumerate}
+
 
 \bibliographystyle{acm}
 \bibliography{dynamic}
