@@ -26,6 +26,7 @@
 \newcommand{\deno}[1]{ \ensuremath{[\![#1]\!]} }
 \newcommand{\code}[1]{$\mathtt{#1}$}
 \newcommand{\pair}[2]{ \ensuremath{\left\langle #1,#2 \right\rangle} }
+\newcommand{\pairtt}[2]{ \ensuremath{\left\langle \mathtt{#1,#2} \right\rangle} }
 
 
 \title{Type Dynamic - Presentation Notes}
@@ -164,8 +165,43 @@
 %% Implicit Polymorphism
 \subsubsection*{Implicit Polymorphism}
 \begin{enumerate}
-	\item
+	\item In a language with implicit polymorphism (like ML), some changes need to be made to matching algorithm
+	\item \dynamic construct only takes one parameter -- no type tag -- typechecker infers most general type
+	\item in \typecase, matched value must be able to be instantiated differently for different uses.
+	example:
+	\begin{alltt}
+	foo = \(\lambda\)df.
+	  typecase df of
+	    (f:\(\forall\)A.(A\(\rightarrow\)A)\(\rightarrow\)(A\(\rightarrow\)A)\(\pair{\mathtt{f add1}}{\mathtt{f not}}\)
+	  else \(\ldots\)
+	\end{alltt}
+	\item languages with type inference always infer the most general type, but if there were explicit type tags in \Dynamic values, the programmer could have given a less general type so patterns should always match type tags that are more general than the pattern -- called tag instantiation
+	\item first order pattern variables not expressive enough to match some examples so we add second order pattern variables like before that can be instantiated to type operators. Example where second order pattern variables are needed:
+	\begin{alltt}
+	applyTwice = \(\lambda\)df.\(\lambda\)dxy.
+	  typecase df of
+	    \{F,F'\} (f:F(P)->F'(P))
+	      typecase dxy of
+	        \{G,H\} (\(\pairtt{x}{y}\):F(G(Q)) \(\times\) F(H(Q)))
+	          \(\pairtt{f x}{f y}\)
+	      else ...
+	   else ...
+	\end{alltt}
+	\item tag instantiation and second-order pattern variables cause some problems when used together. Second order pattern variables can depend on universal variables, but tag instantiation requires matching with more general types, so you dont know how many universal variables there will be. 
+	Example:
+	Tag \code{\forall A.(A\times A)\rightarrow A} matches pattern \code{\{F\}(f:\forall A.F(A)\rightarrow A)} with \code{F = \Lambda X.X\times X} but tag \code{\forall A,B.(A\times B)\rightarrow A} should also match the pattern because it is more general, but \texttt{F} does not depend on \texttt{B} (\code{F = \Lambda X.X \times ??}).
+	\item Solution is to capture variables that appear in tag but not in a pattern in a tuple \code{P} and have all pattern variables depend on \code{P}. So pattern \code{\{F\}(f:\forall A.F(A)\rightarrow A)} is actually  \code{\{F\}(f:\forall A.F(A;P)\rightarrow A)}. \code{P} gets instantiated at run time. For the previously mentioned tag \code{\forall A,B.(A\times B)\rightarrow A}, \code{P} gets instantiated to \code{(B)}. Since arity of \code{P} is not known at compile type, a special tuple sort must be introduced. (Show type rules?)
+	\item authors give typechecking and evaluation rules for implicit polymorphic language with \Dynamic but do not prove any theorems
+	
+	
+\end{enumerate}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Leroy and Mauny (JFP 1993) Dynamics in ML
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection*{Abadi, et al. (1995) - Dynamic Typing in Polymorphic Languages}
+\begin{enumerate}
+	\item
 \end{enumerate}
 
 
