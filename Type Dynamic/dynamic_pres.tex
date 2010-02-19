@@ -42,7 +42,7 @@
 	      Need to know type at runtime to dispatch proper type-specific print fn
 	\item What static type to give to \code{read:IO\rightarrow\;??}
 	      Can be from disk, another process, another computer over the network/internet
-	\item Multi-language programs
+	\item Multi-language programs (use Gray,Findler,Flatt?)
 \end{enumerate}
 
 \subsection*{Background/History}
@@ -199,10 +199,136 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Leroy and Mauny (JFP 1993) Dynamics in ML
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection*{Abadi, et al. (1995) - Dynamic Typing in Polymorphic Languages}
+\subsection*{Leroy and Mauny (JFP 1993) Dynamics in ML}
 \begin{enumerate}
-	\item
+	\item Contribution is adding \Dynamic values to ML -- two extensions: closed type \Dynamic values (fully implemented in CAML) and non-closed type (prototyped in CAML.
+	\item \dynamic construct takes one parameter -- type is inferred
+	\item no explicit \typecase construct, instead \Dynamic elimination is integrated into ML pattern matching -- pattern written \code{dynamic(p:T)}, where \code{p} = pattern and \code{T} = type
 \end{enumerate}
+
+\subsubsection*{Closed-type \Dynamic values in ML}
+\begin{enumerate}
+	\item only allowed to create \Dynamic values with closed types
+	\item so \code{dynamic(fn\;x \rightarrow x)} is legal because the inferred type is \code{\forall\alpha. \alpha\rightarrow\alpha} but \Dynamic in \code{fn\;x \rightarrow dynamic\;x} is illegal because \code{x} has type \code{\alpha} which is free -- type of value put into \Dynamic cannot be determined at compile time (would require run time type information to be passed to all functions, even those that dont create \Dynamic values because you dont know if nested functions do)
+	\item allowing \Dynamic objects to have unclosed types would also break ML parametricity properties -- polymorphic fns need to operate uniformly over all input types -- ie \code{map\;g\;(f\;l) = f\;(map\;g\;l)} for \code{f:\forall\alpha.\alpha\;list\rightarrow\alpha\;list} but the following example does not have this property:
+	\begin{alltt}
+	let f = fn l ->
+	  match (dynamic l) with
+	    dynamic(m:int list) -> reverse l
+	  | d -> l
+	\end{alltt}
+	\item type tag in \Dynamic value can match less general pattern -- so polymorphic pattern actually matches less things than specific pattern -- more general patterns need to appear first in case statements
+
+	\item typing rules: \\
+	type scheme $\sigma ::= \forall\alpha_1\ldots\alpha_n.\tau$\\
+	type env $E : Var \rightarrow \sigma$\\
+	$E\vdash a:\tau \Rightarrow b$ = ``expression $a$ has type $\tau$ in type env $E$'', $b$ is type-annotated version of $a$
+	$Clos(\tau,V)$ = closure of type $\tau$ wrt type vars not in $V$ = $\forall\alpha_1\ldots\alpha_n.\tau$, where $\{\alpha_1,\ldots,\alpha_n\} = FV(\tau)\backslash V$\\
+	$Clos(\tau,\emptyset)$ = type scheme obtained by generalizing free vars in $FV(\tau)$ \\
+	$\vdash p:\tau\Rightarrow E$ = ``pattern $p$ has type $\tau$ and enriches type environment by $E$ \\
+	$Clos(E,\emptyset)$ = type env obtained by creating type schemes from $\tau \in Rng(E)$\\
+	\inferrule{E\vdash a:\tau\Rightarrow b \\ FV(\tau)\cap FV(E) = \emptyset}
+	          {E\vdash \dynamic\;a:\Dynamic\Rightarrow\dynamic(b,Clos(\tau,\emptyset))} \\
+	\inferrule{\vdash p:\tau\Rightarrow E}
+	          {\vdash\dynamic(p:\tau):\Dynamic\Rightarrow Clos(E,\emptyset)}
+	
+	\item evaluation rules:\\
+	\newcommand{\eval}{ \ensuremath{\rightarrow^*} }
+	$\vdash v < p \eval m$ = ``matching of value v against pattern p results in m'' \\
+	$\tau \leq \sigma$ = type $\tau$ is instance of type scheme $\sigma$ ($\sigma$ is more general) \\
+	\inferrule{e\vdash b \eval v}
+	          {e\vdash \dynamic(b:\sigma)\eval \dynamic(v:\sigma)} \\
+	\inferrule{\vdash v < p \eval e \\ \tau \leq \sigma}
+	          {\vdash \dynamic(v:\sigma) < \dynamic(p:\tau)\eval e}
+	
+	\item Soundness: if $[]\vdash a_0:\tau_0 \Rightarrow b_0$ for some type $\tau$, then we cannot derive $[]\vdash b_0 \eval \mathtt{wrong}$
+	\item authors also show how to modify unification algorithm and discuss other implementation issues
+\end{enumerate}
+
+
+
+
+\subsubsection*{Non-closed-type \Dynamic values in ML}
+\begin{enumerate}
+	\item	closed-type \Dynamic values are not enough to match certain cases -- \texttt{print} fn might want to match \Dynamic that contains any pair, but a pattern like \code{dynamic((x,y):\alpha\times\beta)} only matches \Dynamic values whose internal type tag is at least as general as $\forall\alpha\forall\beta.\alpha\times\beta$ and will not match \Dynamic values where internal type is a pair of specific types.
+	\item need existentially quantified pattern variables -- can have patterns like:\\
+	\code{\exists\alpha.\exists\beta.dynamic((x,y):\alpha\times\beta)} -- matches \Dynamic that contains any pair \\
+	\code{\exists\alpha.dynamic(x::l:\alpha\;list)} -- matches \Dynamic that contains any list \\
+	\code{\exists\alpha.\exists\beta.dynamic(f:\alpha\rightarrow\beta)} -- matches \Dynamic that contains any fn \\
+
+	\item existential and universal quantifiers can be mixed -- semantics depends on order of quantification\\
+	\code{\forall\alpha.\exists\beta.dynamic(f:\alpha\rightarrow\beta)} -- matches \Dynamic that contains fn that operates uniformly on input -- $\beta$ depends on $\alpha$ -- example would be \code{f:\forall\alpha.\alpha\rightarrow\alpha\;list} \\
+	\code{\exists\alpha.\forall\beta.dynamic(f:\alpha\rightarrow\beta)} -- matches \Dynamic that contains fn that returns $\beta$ for any $\beta$ -- no such fn!
+	\item when type variable $\beta$ is allowed to depend on $\alpha$, like in example \code{\forall\alpha.\exists\beta.dynamic(f:\alpha\rightarrow\beta)}, typechecker must assume that $\beta$ ALWAYS depends on $\alpha$, so $\beta$ is actually type constructor parameterized by $\alpha$ -- otherwise this example will typecheck: \\
+	\code{fn\;\forall\alpha.\exists\beta.dynamic(f:\alpha\rightarrow\beta)\rightarrow\;f(1)=f(true)} \\
+	even though applying the fn to \code{dynamic(fn\;x\rightarrow x)} produces a run time type error -- \\
+	With restriction, above example has type $\forall\alpha.\alpha\rightarrow S_\beta(\alpha)$ so you cannot apply the fn to both 1 and \texttt{true} because you will get types \code{S_\beta(int)} and \code{S_\beta(bool)} as operands to =
+	
+	\item typing rules: \\
+	type scheme $\sigma ::= \forall\alpha_1\ldots\alpha_n.\tau$\\
+	type env $E : Var \rightarrow \sigma$\\
+	$E\vdash a:\tau \Rightarrow b$ = ``expression $a$ has type $\tau$ in type env $E$'', $b$ is type-annotated version of $a$
+	$Clos(\tau,V)$ = closure of type $\tau$ wrt type vars not in $V$ = $\forall\alpha_1\ldots\alpha_n.\tau$, where $\{\alpha_1,\ldots,\alpha_n\} = FV(\tau)\backslash V$\\
+	$Clos(\tau,\emptyset)$ = type scheme obtained by generalizing free vars in $FV(\tau)$ \\
+	quantifier prefixes: $Q ::= \epsilon \mid \forall\alpha.Q \mid \exists\alpha.Q$  (assume vars renamed so same var is not bound twice) \\
+	$BV(Q)$ = set of variables found by prefix $Q$ \\
+	$\bar{\tau}$ = types that do not contain previously mentioned type constructors \\
+	$\theta$ : TypeVar $\rightarrow \tau$  = type substitution \\
+	$S:\textrm{TypeVar}\ldots \times Q \rightarrow \theta$ is defined as follows:\\
+	\begin{align*}
+	S(\alpha_1\ldots\alpha_n,\epsilon)         &= id \\
+	S(\alpha_1\ldots\alpha_n,\forall\alpha.Q)  &= S(\alpha_1\ldots\alpha_n\alpha,Q) \\
+	S(\alpha_1\ldots\alpha_n,\exists\alpha.Q) &= \{\alpha\mapsto S_\alpha(\alpha_1\ldots\alpha_n)\} \circ S(\alpha_1\ldots\alpha_n,Q) \\
+	\end{align*}
+	$\vdash p:\tau\Rightarrow E$ = ``pattern $p$ has type $\tau$ and enriches type environment by $E$ \\
+	$Clos(E,\emptyset)$ = type env obtained by creating type schemes from $\tau \in Rng(E)$\\
+	\inferrule{E\vdash a:\tau\Rightarrow b \\ FV(\tau)\cap FV(E) = \emptyset}
+	          {E\vdash \dynamic\;a:\Dynamic\Rightarrow\dynamic(b,Clos(\tau,\emptyset))} \\
+	\inferrule{FV(\bar{\tau})\subseteq BV(Q) \\ Q \vdash p:\bar{\tau}\Rightarrow E \\ \theta = S(\epsilon,Q)}
+	          {Q\vdash\dynamic(p:\bar{\tau}):\Dynamic\Rightarrow Clos(\theta(E),\emptyset)}
+	
+	\item evaluation rules:\\
+	\newcommand{\eval}{ \ensuremath{\rightarrow^*} }
+	$\vdash v < p \eval m$ = ``matching of value v against pattern p results in m'' \\
+	$T:\tau\times\textrm{Env}\rightarrow\bar{\tau}$ -- instantiates type constructors in $\tau$ -- defined as:
+	\begin{align*}
+	T(S_\alpha(\tau_1\ldots\tau_n),e) &= \bar{\tau}[\alpha_1\leftarrow T(\tau_1,e),\ldots,\alpha_n\leftarrow T(\tau_n,e)] \;\textrm{if}\; e(\alpha) = \lambda\alpha_1\ldots\alpha_n.\bar{\tau} \\
+	T((\forall\alpha_1\ldots\alpha_n.\tau),e) &= \forall\alpha_1\ldots\alpha_n.T(\tau,e) \;\textrm{if}\; \{\alpha_1\ldots\alpha_n\}\cap Dom(e) = \emptyset
+	\end{align*}
+	$e$ -- evaluation environment (can also map type vars to type constructors) \\
+	$\Gamma$ -- set of type equations to be solved \\
+	\inferrule{e\vdash b \eval v}
+	          {e\vdash \dynamic(b:\sigma)\eval \dynamic(v:T(\sigma,e))} \\
+	\inferrule{   Q\vdash v < p \eval (e,\Gamma) 
+	           \\ \bar{\sigma} = \forall\alpha_1\ldots\alpha_n.\bar{\tau}' 
+	           \\ \{\alpha_1\ldots\alpha_n\}\cap BV(Q)=\emptyset}
+	          {Q \vdash \dynamic(v:\bar{\sigma}) < \dynamic(p:\bar{\tau})\eval (e,\Gamma\cup\{\bar{\tau}'=\bar{\tau}\})}
+	
+	\item no soundness theorem for second extension
+	
+	\item authors also show how to modify unification algorithm and discuss other implementation issues
+	
+	 \end{enumerate}
+
+\subsection*{Abadi, et al. vs Leroy and Mauny's \Dynamic language with implicit polymorphism}
+
+\begin{tabular}{c|c}
+Abadi, et al.                                    & Leroy and Mauny \\
+\hline\hline
+explicit \typecase construct                     & integrate into ML pattern matching \\
+\hline
+higher order pattern variables                   & existential pattern variables \\
+\hline
+\code{\forall\alpha.\alpha\rightarrow F[\alpha]} & $\forall\alpha.\exists\beta.\alpha\rightarrow\beta$ \\
+\hline
+arbitrary dependencies between pattern variables & mixed quantification only allows \\
+(more expressive)                                & linear dependencies between pattern variables \\
+\hline
+ad-hoc restrictions on pattern variables         & simple interpretation in first order logic \\                                                 
+
+\end{tabular}
+
+\subsection*{Gray,Findler,Flatt - Fine-Grained Interoperability Through Mirrors and Contracts}
 
 
 \bibliographystyle{acm}
