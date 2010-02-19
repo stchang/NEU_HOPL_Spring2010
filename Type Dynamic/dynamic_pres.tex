@@ -47,8 +47,9 @@
 
 \subsection*{Background/History}
 \begin{enumerate}
-	\item languages with disjoint union (finite): Algol-68, Pascal (tagged variant record)
-	\item language infinite disjoint union: Simula-67's subclass structure (INSPECT statement allows program to determine subclass of a value at run time)
+	\item \Dynamic is essentially an infinite disjoint union
+	\item languages with (finite) disjoint union: Algol-68, Pascal (tagged variant record)
+	\item languages infinite disjoint union: Simula-67's subclass structure (INSPECT statement allows program to determine subclass of a value at run time)
 	\item languages with dynamic typing in static context: CLU (\code{any} type/force), Cedar/Mesa (REFANY/TYPECASE), Modula-2+, Modula-3 (from Cedar/Mesa) -- these languages wanted to support programming idioms from LISP
 	\item formalization of language with \Dynamic: Schaffert and Scheifler (1978) gave formal description and denotational semantics for CLU but did not give a soundness theorem -- also required every value to carry type tag at run time
 	\item ML had some proposals for adding \Dynamic but ultimately unpublished: Gordon (1980, personal communication), Mycroft (1983, draft)
@@ -201,7 +202,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection*{Leroy and Mauny (JFP 1993) Dynamics in ML}
 \begin{enumerate}
-	\item Contribution is adding \Dynamic values to ML -- two extensions: closed type \Dynamic values (fully implemented in CAML) and non-closed type (prototyped in CAML.
+	\item Contribution is adding \Dynamic values to ML -- two extensions: closed type \Dynamic values (fully implemented in CAML) and non-closed type (prototyped in CAML).
 	\item \dynamic construct takes one parameter -- type is inferred
 	\item no explicit \typecase construct, instead \Dynamic elimination is integrated into ML pattern matching -- pattern written \code{dynamic(p:T)}, where \code{p} = pattern and \code{T} = type
 \end{enumerate}
