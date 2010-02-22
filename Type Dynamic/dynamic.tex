@@ -1,14 +1,15 @@
 % dynamic.tex
 
-\documentclass[12pt]{article}	% YOUR INPUT FILE MUST CONTAIN THESE
+\documentclass[letterpaper]{llncs}
+%\documentclass[12pt]{article}	% YOUR INPUT FILE MUST CONTAIN THESE
 \usepackage{url}
 \usepackage{graphicx}
-\oddsidemargin  -0.4in
-\evensidemargin 0.0in
-\textwidth      7in
-\headheight     -0.5in
-\topmargin      0.0in
-\textheight     9.0in
+%\oddsidemargin  -0.4in
+%\evensidemargin 0.0in
+%\textwidth      7in
+%\headheight     -0.5in
+%\topmargin      0.0in
+%\textheight     9.0in
 \usepackage{amssymb}
 \usepackage{amsmath}
 \usepackage{xspace}
@@ -23,16 +24,19 @@
 
 \title{Type Dynamic}
 \author{Stephen Chang}
+\institute{HOPL, Spring 2010}
 \date{2/26/2010}
 \maketitle
 
-\subsection*{Dynamic Typing in a Statically Typed Language~\cite{Abadi1991Dynamic}}
+\subsection*{Dynamic Typing in a Statically Typed Language}%~\cite{Abadi1991Dynamic}
 
 \begin{verbatim}
 @article{Abadi1991Dynamic,
-  author    = {Martin Abadi, Luca Cardelli, Benjamin C. Pierce, and Gordon D. Plotkin},
+  author    = {Martin Abadi, Luca Cardelli, Benjamin C. Pierce, 
+               and Gordon D. Plotkin},
   title     = {Dynamic Typing in a Statically Typed Language},
-  journal   = {ACM Trans. on Programming Languages and Systems (TOPLAS)},
+  journal   = {ACM Trans. on Programming Languages and Systems 
+               (TOPLAS)},
   volume    = {13},
   number    = {2},
   year      = {1991},
@@ -40,27 +44,27 @@
 }
 \end{verbatim}
 
-\subsubsection*{Abstract}
-Statically typed programming languages allow earlier error checking, better enforcement of
-disciplined programming styles, and the generation of more efficient object code than languages
-where all type consistency checks are performed at run time. However, even in statically typed
-languages, there is often the need to deal with data whose type cannot be determined at compile
-time. To handle such situations safely, we propose to add a type \Dynamic whose values are
-pairs of a value $v$ and a type tag $T$, where $v$ has the type denoted by $T$. Instances of \Dynamic
-are built with an explicit tagging construct and inspected with a type safe \typecase construct.
-This paper explores the syntax, operational semantics, and denotational semantics of a simple
-language that includes the type \Dynamic. We give examples of how dynamically typed values
-can be used in programming. Then we discuss an operational semantics for our language and
-obtain a soundness theorem, We present two formulations of the denotational semantics of this
-language and relate them to the operational semantics. Finally, we consider the implications of
-polymorphism and some implementation issues.
+%\subsubsection*{Abstract}
+%Statically typed programming languages allow earlier error checking, better enforcement of
+%disciplined programming styles, and the generation of more efficient object code than languages
+%where all type consistency checks are performed at run time. However, even in statically typed
+%languages, there is often the need to deal with data whose type cannot be determined at compile
+%time. To handle such situations safely, we propose to add a type \Dynamic whose values are
+%pairs of a value $v$ and a type tag $T$, where $v$ has the type denoted by $T$. Instances of \Dynamic
+%are built with an explicit tagging construct and inspected with a type safe \typecase construct.
+%This paper explores the syntax, operational semantics, and denotational semantics of a simple
+%language that includes the type \Dynamic. We give examples of how dynamically typed values
+%can be used in programming. Then we discuss an operational semantics for our language and
+%obtain a soundness theorem, We present two formulations of the denotational semantics of this
+%language and relate them to the operational semantics. Finally, we consider the implications of
+%polymorphism and some implementation issues.
 
 
 \subsubsection*{Summary}
 
-There are some situations that demand run-time type information in a statically-typed language. The authors address this issue by introducing \Dynamic values to the simply typed lambda calculus. A \Dynamic value is a pair that contains a value and a type tag for that value. \Dynamic values are inspected using a \typecase construct, which uses patterns. The authors give both an operational semantics and a denotational semantics for their language and use both to prove that their type system is sound.
+Even in the most expressive statically-typed languages, there are always programs that will require run-time type information. An example of such a program is the \texttt{eval} function, whose ouput cannot be assigned a type at compile time. Abadi et al. introduce \Dynamic values to solve this problem. A \Dynamic value is a pair that contains a value and a type tag for that value. The authors also introduce the \typecase construct, which uses patterns to inspect \Dynamic values. The authors formalize \Dynamic values as an extension to the simply-typed lambda calculus and give both an operational semantics and a denotational semantics for their language. The authors independently prove the soundness of their type system using each semantics.
 
-Other languages have constructs similar to \Dynamic but this paper is the first to present a formal description of a language with \Dynamic values and the first give a soundness proof for their type system that includes \Dynamic. The authors briefly mention several possible extensions to their language such as polymorphism but to not go into much detail.
+Other languages have constructs similar to \Dynamic but this paper is the first to present a formal description of a language with \Dynamic values and is also the first to give a soundness proof for a type system that includes the \Dynamic type. In their conclusion, the authors briefly mention several possible extensions to their language such as polymorphism.
 
 
 %A \Dynamic value is essentially an infinite disjoint union. Previous languages such as Simula-67, CLU, Cedar/Mesa, Modula-2+, and Modula-3 have similar constructs but the behavior of the construct has never been formally specified. The main contribution of this paper is a formal specification of a language with \Dynamic values. 
@@ -91,11 +95,12 @@ Other languages have constructs similar to \Dynamic but this paper is the first 
 
 
 
-\subsection*{Dynamic Typing in Polymorphic Languages~\cite{Abadi1995DynamicPolymorphic}}
+\subsection*{Dynamic Typing in Polymorphic Languages}%~\cite{Abadi1995DynamicPolymorphic}
 
 \begin{verbatim}
 @article{Abadi1995DynamicPolymorphic,
-  author    = {Martin Abadi, Luca Cardelli, Benjamin C. Pierce, and Didier Remy},
+  author    = {Martin Abadi, Luca Cardelli, Benjamin C. Pierce, 
+               and Didier Remy},
   title     = {Dynamic Typing in Polymorphic Languages},
   journal   = {Journal of Functional Programming},
   volume    = {5},
@@ -105,13 +110,13 @@ Other languages have constructs similar to \Dynamic but this paper is the first 
 }
 \end{verbatim}
 
-\subsubsection*{Abstract}
-There are situations in programming where some dynamic typing is needed, even in the presence of advanced static type systems. We investigate the interplay of dynamic types with other advanced type constructions, discussing their integration into languages with explicit polymorphism (in the style of system F), implicit polymorphism (in the style of ML), abstract data types, and subtyping.
+%\subsubsection*{Abstract}
+%There are situations in programming where some dynamic typing is needed, even in the presence of advanced static type systems. We investigate the interplay of dynamic types with other advanced type constructions, discussing their integration into languages with explicit polymorphism (in the style of system F), implicit polymorphism (in the style of ML), abstract data types, and subtyping.
 
 \subsubsection*{Summary}
-The authors add polymorphism to their language from their previous paper~\cite{Abadi1991Dynamic}. To support polymorphism, second-order pattern variables are used in the \typecase construct (these variables can be instantiated to type operators). Their new language is equivalent to (a restricted form of) System $F_\omega$ extended with \Dynamic. The authors present two flavors of polymorphism, explicit and implicit.
+The authors add polymorphism to the language of their previous paper. To support polymorphism, second-order pattern variables must be added to the \typecase construct (these variables can be instantiated to type operators). The new language is equivalent to (a restricted form of) System $F_\omega$ extended with \Dynamic. The authors present two flavors of polymorphism, explicit and implicit.
 
-The authors do not give a specification for their language with explicit polymorphism. No typing rules or evaluation rules are given either. The authors give typechecking and evaluation rules for their language with implicit polymorphism but they do not prove soundness for their type system.
+Even though the authors describe languages with both explicit and implicit polymorphism, the authors only present typing and evaluation rules for the language with implicit polymorphism. Also, unlike in their previous paper, the authors do not prove soundness for any of the type systems in this paper.
 
 
 %The main contribution of this work is incorporating polymorphism into a language with \Dynamic values. The authors first add explicit polymorphism to their language but encounter a problem where some \Dynamic values cannot be matched uniquely using \typecase. The authors work around the problem by restricting the allowable \typecase patterns. The authors then show that their solution can also be used to add abstract data types and subtyping to their language. They also explore implicit polymorphism and compare their work to that of Leroy and Mauny~\cite{Leroy1991Dynamics}.
@@ -128,7 +133,7 @@ The authors do not give a specification for their language with explicit polymor
 %Authors do not give typechecking or evaluation rules for explicit polymorphic language.
 
 
-\subsection*{Dynamics in ML~\cite{Leroy1991Dynamics}}
+\subsection*{Dynamics in ML}%~\cite{Leroy1991Dynamics}
 \begin{verbatim}
 @inproceedings{Leroy1991Dynamics,
   author    = {Xavier Leroy and Michel Mauny},
@@ -141,15 +146,15 @@ The authors do not give a specification for their language with explicit polymor
 
 \newcommand{\mlcode}[1]{$\mathtt{#1}$}
 
-\subsubsection*{Abstract}
-Objects with dynamic types allow the integration of operations that essentially require run-time type-checking into statically-typed languages. This paper presents two extensions of the ML language with dynamics, based on what has been done in the CAML implementation of ML, and discusses their usefulness. The main novelty of this work is the combination of dynamics with polymorphism.
+%\subsubsection*{Abstract}
+%Objects with dynamic types allow the integration of operations that essentially require run-time type-checking into statically-typed languages. This paper presents two extensions of the ML language with dynamics, based on what has been done in the CAML implementation of ML, and discusses their usefulness. The main novelty of this work is the combination of dynamics with polymorphism.
 
 \subsubsection*{Summary}
-Leroy and Mauny give two extensions to ML that use \Dynamic. They integrate inspection of \Dynamic values with ML's pattern matching. The first extension requires that \Dynamic values only contain values with closed types. The authors give typechecking and evaluation rules for this language and prove soundness for their type system. They also explain how to modify the unification algorithm and discuss various implementation issues (the authors implement the first extension in CAML).
+Leroy and Mauny present two extensions to ML that use \Dynamic. Both extensions integrate inspection of \Dynamic values with ML's pattern matching. The first extension requires \Dynamic values to only contain values with closed types. The authors devise typechecking and evaluation rules for this language and prove soundness for their type system. They also explain how to modify the unification algorithm and discuss various implementation issues concerning the first extension.
 
-The first extension is unable to capture some patterns such as ``any pair'' or ``any function'' so the authors present a second extension that allows existential variables in patterns. The authors give new typing and evaluation rules for the second extension, and give a modified unification algorithm, but they do not prove soundness for this type system. The authors have a working prototype for the second extension and they also discuss various implementation issues.
+The first extension is unable to capture some patterns such as ``any pair'' or ``any function'' so the authors develop a second extension that allows existential variables in patterns. The authors give new typing and evaluation rules for the second extension and present a modified unification algorithm, but they do not prove soundness for this type system. The authors have a working prototype for the second extension and they also discuss various implementation issues.
 
-The language in this paper (second extension) differs from Abadi, et al.'s language with implicit polymorphism in several ways. The main difference is that Leroy and Mauny's (LM) extension uses existential pattern variables, while Abadi, et al.'s (ACPP) language uses second-order pattern variables. ACPP's language is more expressive since it allows arbitrary dependencies between pattern variables, while LM only allows linear dependencies between quantified variables in their patterns. However, ACPP must impose ad-hoc restrictions on their language to address various issues that arise with second-order pattern variables, while LM has a very simple interpretation in first-order logic.
+The second language in this paper differs from Abadi et al.'s language with implicit polymorphism in several ways. The main difference is that Leroy and Mauny's extension (LM) uses existential pattern variables, while Abadi et al.'s language (ACPP) uses second-order pattern variables. ACPP is more expressive since it allows arbitrary dependencies between pattern variables, while LM only allows linear dependencies between quantified variables in their patterns. However, ACPP must impose ad-hoc restrictions on their language to address various issues that arise with second-order pattern variables, while LM has a simple interpretation in first-order logic.
 
 
 %\subsubsection*{Summary\_orig}
@@ -215,27 +220,29 @@ The language in this paper (second extension) differs from Abadi, et al.'s langu
 
 
 
-\subsection*{Fine-Grained Interoperability Through Mirrors and Contracts~\cite{Gray2005FineGrained}}
+\subsection*{Fine-Grained Interoperability Through Mirrors and Contracts}%~\cite{Gray2005FineGrained}
 
 \begin{verbatim}
 @inproceedings{Gray2005FineGrained,
-  author    = {Kathryn E. Gray, Robert Bruce Findler, and Matthew Flatt},
-  title     = {Fine-grained interoperability through mirrors and contracts},
+  author    = {Kathryn E. Gray, Robert Bruce Findler, 
+               and Matthew Flatt},
+  title     = {Fine-grained interoperability through mirrors and 
+               contracts},
   booktitle = {OOPSLA},
   year      = {2005},
   pages     = {231-245}
 }
 \end{verbatim}
 
-\subsubsection*{Abstract}
-As a value flows across the boundary between interoperating languages, it must be checked and converted to fit the types and representations of the target language. For simple forms of data, the checks and coercions can be immediate; for higher order data, such as functions and objects, some must be delayed until the value is used in a particular way. Typically, these coercions and checks are implemented by an ad-hoc mixture of wrappers, reflection, and dynamic predicates. We observe that 1) the wrapper and reflection operations fit the profile of mirrors, 2) the checks correspond to contracts, and 3) the timing and shape of mirror operations coincide with the timing and shape of contract operations. Based on these insights, we present a new model of interoperability that builds on the ideas of mirrors and contracts, and we describe an interoperable implementation of Java and Scheme that is guided by the model.
+%\subsubsection*{Abstract}
+%As a value flows across the boundary between interoperating languages, it must be checked and converted to fit the types and representations of the target language. For simple forms of data, the checks and coercions can be immediate; for higher order data, such as functions and objects, some must be delayed until the value is used in a particular way. Typically, these coercions and checks are implemented by an ad-hoc mixture of wrappers, reflection, and dynamic predicates. We observe that 1) the wrapper and reflection operations fit the profile of mirrors, 2) the checks correspond to contracts, and 3) the timing and shape of mirror operations coincide with the timing and shape of contract operations. Based on these insights, we present a new model of interoperability that builds on the ideas of mirrors and contracts, and we describe an interoperable implementation of Java and Scheme that is guided by the model.
 
 \subsubsection*{Summary}
-Existing frameworks for allowing different languages to interoperate, like Microsoft's COM, often only allow ``course-grained'' interoperability because they require that all languages use a universal format when exchanging data. The main contribution of this paper is to show that two specific languages (Scheme and Java) can interoperate on a ``fine-grained'' basis, meaning that by extending each language in specific ways, the languages can retain use of many of their native features. Mirrors~\cite{Bracha2004Mirrors} and contracts~\cite{Findler2002Contracts} and the addition of a \dynamic construct in Java are the key to achieving this ``fine-grained'' interoperability.
+Existing interoperability frameworks such as Microsoft's COM often only allow ``course-grained'' interoperability because they require that all languages use a universal format when exchanging data. The main contribution of this paper is to show that two specific languages (Scheme and Java) can interoperate on a ``fine-grained'' basis, meaning that by extending each language in specific ways, the languages can retain use of many of their native features. Mirrors~\cite{Bracha2004Mirrors}, contracts~\cite{Findler2002Contracts}, and the addition of a \dynamic type to Java are the keys to achieving this ``fine-grained'' interoperability.
 
-The primary interoperability vehicle introduced is dynamic method calls in Java. Specifically, a \dynamic keyword is added that can be used in place of a type. The \dynamic construct is implemented using mirrors~\cite{Bracha2004Mirrors}. When a method call is made to an object of type \dynamic, the existence of the method is not checked until run time. This differs from the standard Java behavior, where methods are statically associated with classes. However, now run-time checks are required to ensure that dynamic method calls accept arguments of the correct type and return a value of the expected type. The authors uses PLT-Scheme-style contracts~\cite{Findler2002Contracts} in Java to check that the correct types are used (and Java's type system is able to infer such contracts automatically from the surrounding context). In this way, Java's type safety is preserved when interoperating in Scheme. In addition, Scheme's contracts can also be preserved in Java programs. The \dynamic construct also enables other Scheme-like features such as functions as values, which can be implemented using \dynamic static methods.
+The primary interoperability vehicle introduced is dynamic method calls in Java. Specifically, the authors add a \dynamic keyword that can be used in place of a type. The \dynamic construct is implemented using mirrors~\cite{Bracha2004Mirrors}. When a method of type \dynamic is called, the existence of the method is not checked until run time. This differs from the standard Java behavior, where methods are statically associated with classes. However, now run-time checks are required to ensure that dynamic method calls accept arguments of the correct type and return a value of the expected type. The authors uses PLT-Scheme-style contracts~\cite{Findler2002Contracts} in Java to check that the correct types are used (Java's type system is able to automatically infer such contracts from the surrounding context). In this way, Java's type safety is preserved when interoperating in Scheme. In addition, Scheme's contracts can also be preserved in Java programs. The \dynamic construct also enables other Scheme-like features such as functions as values, which can be implemented using \dynamic static methods.
 
-The \dynamic construct introduced in this paper is similar to the \Dynamic values originally introduced by Abadi, et al~\cite{Abadi1991Dynamic} except Abadi's explicit \typecase construct has been replaced with object-oriented method dispatch.
+The \dynamic construct introduced in this paper is similar to the \Dynamic values originally introduced by Abadi et al. except Abadi et al.'s explicit \typecase construct has been replaced with object-oriented method dispatch.
 
 
 \bibliographystyle{acm}
