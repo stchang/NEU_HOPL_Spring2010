@@ -27,6 +27,7 @@
 \newcommand{\code}[1]{$\mathtt{#1}$}
 \newcommand{\pair}[2]{ \ensuremath{\left\langle #1,#2 \right\rangle} }
 \newcommand{\pairtt}[2]{ \ensuremath{\left\langle \mathtt{#1,#2} \right\rangle} }
+\newcommand{\dyn}[2]{ \ensuremath{ \pairtt{v}{\tau}_\texttt{Dyn} } }
 
 
 \title{Type Dynamic - Presentation Notes}
@@ -35,19 +36,106 @@
 \maketitle
 
 \subsection*{Motivation}
-\begin{enumerate}
-	\item Static typecheckers have many advantages but sometimes dynamic typechecking is unavoidable. Type \Dynamic is about embedding dynamic typechecking within statically typed languages.
-	\item What static type to give to \code{eval:string\rightarrow\;??}
-	\item What static type to give to \code{print:\;??\rightarrow\;string}
-	      Need to know type at runtime to dispatch proper type-specific print fn
-	\item What static type to give to \code{read:IO\rightarrow\;??}
-	      Can be from disk, another process, another computer over the network/internet
-	\item Multi-language programs (use Gray,Findler,Flatt?)
-\end{enumerate}
+My presentation is about the type \Dynamic. Values with type \Dynamic are pairs that contain some value along with a type tag for that value. Here we have a type rule and an evaluation rule for the creation of \Dynamic values. They are pretty straightforward. For brevity, I'm not going to write out the entire language, but these \Dynamic values have been added to the simply typed lambda calculus. If some expression \texttt{e} has type $\mathtt{\tau}$, then this expression where this \dynamic constructor is applied to some \texttt{e} and $\mathtt{\tau}$, has type \Dynamic. For evaluation, if this expression \texttt{e} evaluates to v, then the result of this expression is the pair of v and its type tag $\tau$, and obviously this value also has type \Dynamic. Again, this is the constructor that I'm going to use to create dynamic values, and this is the notation I'm going to use to represent actual \Dynamic values. Any questions?
+
+\inferrule{ \Gamma\vdash e:\tau }
+          { \Gamma\vdash (\dynamic\;e:\tau):\Dynamic }
+\inferrule{ e \rightarrow^* v }
+          { (\dynamic\;e:\tau) \rightarrow^* \dyn{v}{\tau} }
+
+$\;$\\
+
+So, what is this good for? Well, in statically typed languages, there are some programs that cannot be assigned a type at compile time. For example, what type would you assign to this function:
+
+$\;$\\
+\code{eval:string\rightarrow\;??}
+$\;$\\
+
+\noindent You can't give it a static type, right? How about this one:
+
+$\;$\\
+\code{print:\;??\rightarrow\;string}
+$\;$\\
+
+\noindent These programs all need type information at run time and type \Dynamic is a way of embedding this run time type information in statically typed languages. Here is another example:
+
+$\;$\\
+\code{read:IO\rightarrow\;??}
+$\;$\\
+
+\noindent where this \texttt{IO} is a source of untyped data and can represent a disk, another process, or maybe another computer over the internet.
+
+Untyped data can also come from other languages, for example, when you are dealing with multi-language programs. Another example of an application of type \Dynamic comes from a paper by Gray, Findler, Flatt, where they use \Dynamic in an object oriented setting. The contribution of the paper is that it demonstrates fine-grained interoperability between Scheme and Java. The paper presents an example where you have a Scheme server that interacts with Java Servlets. In Java, method invocation is always tied to the static type of an object, so you can't call a method unless it was statically known. In order to work with Scheme, you need dynamic method calls like you have in Smalltalk or Python. So to get this behavior, the authors add a \dynamic type and objects with this type are not inspected until runtime to see if they implement a method that is called. I'm going to skip the web server example since I am not super familiar with web programming concepts, so here's a silly example:
+
+\begin{verbatim}
+Food getFavoriteFood(dynamic fish, Food[] kinds) {
+  if (fish.hasFavorite())
+    return new Food(fish.getFavorite());
+  else
+    return fish.chooseFavorite(kinds);
+}
+\end{verbatim}
+
+In the example, the existence of the fish methods is not checked until run time. The fish object does not even have to have all three methods implemented, and it could be a Scheme object.
+
+Ok, back to the functional world. I've shown you how to create \Dynamic values, but I have not shown you how to eliminate them. This is done using a \typecase construct. Here are the type rules and evaluation rules for \typecase:
+
+\inferrule{\Gamma \vdash e:\Dynamic \\\\ 
+           \forall i,\forall\sigma\in Subst_{\vec{X_i}} \; \Gamma[x_i \leftarrow T_i\sigma]\vdash e_i\sigma:T \\\\
+           \Gamma\vdash e_{else}:T}
+          {\Gamma\vdash(\typecase\;e\;\texttt{of} \\\\
+                        \ldots(\vec{X_i})(x_i:T_i)\;e_i\ldots\\\\
+                        \texttt{else}\; e_{else}\\\\
+                        \texttt{end}):T}
+\inferrule{\vdash\;e\Rightarrow(\dynamic\;w:T)\\\\
+            \forall j<k.match(T,T_j) \textrm{fails}\\\\
+            match(T,T_k) = \sigma\\\\
+            \vdash e_k\sigma[x_k\leftarrow w]\Rightarrow v}
+          {\vdash(\typecase\;e\;\texttt{of}\\\\
+            \ldots(\vec{X_i})(x_i:T_i)\;e_i\ldots\\\\
+            \texttt{else}\; e_{else}\\\\
+            \texttt{end})\Rightarrow v}
+\inferrule{\vdash\;e\Rightarrow(\dynamic\;w:T)\\\\
+            \forall k.match(T,T_k) \textrm{fails}\\\\
+            \vdash e_{else}\Rightarrow v}
+          {\vdash(\typecase\;e\;\texttt{of}\\\\
+            \ldots(\vec{X_i})(x_i:T_i)\;e_i\ldots\\\\
+            \texttt{else}\; e_{else}\\\\
+            \texttt{end})\Rightarrow v}
+
+\typecase works by using patterns and pattern matching. The i represents different branches of the case statement. The expression $x:T$ is a pattern and we say that a \Dynamic value matches the pattern if this type T matches the type inside the \Dynamic value. When we have a match, this x gets bound to the value inside the \Dynamic. T does not have to be an exact type. This X with an arrow over it represents type variables that can occur in T, so what this rule is saying is that 
+An example might be more useful here, so here is an example of the print function from before:
+
+\begin{verbatim}
+tostring: Dynamic -> String = 
+  \dv:Dynamic.
+    typecase dv of
+      (v:String) (string-append '"' v '"')
+      (n:Nat) (natToStr n)
+      (X,Y)(f:X -> Y) "<function>"
+      (X,Y)(p:X x Y)
+        (string-append "<" (tostring (dynamic (fst p):X) ","
+                           (tostring (dynamic (snd p):Y) ">")
+      (d:Dynamic) (string-append "dynamic" (tostring d)
+      else "unknown"
+    end
+\end{verbatim}
+
+
+
+%\begin{enumerate}
+%	\item Static typecheckers have many advantages but sometimes dynamic typechecking is unavoidable. Type \Dynamic is about embedding dynamic typechecking within statically typed languages.
+%	\item What static type to give to \code{eval:string\rightarrow\;??}
+%	\item What static type to give to \code{print:\;??\rightarrow\;string}
+%	      Need to know type at runtime to dispatch proper type-specific print fn
+%	\item What static type to give to \code{read:IO\rightarrow\;??}
+%	      Can be from disk, another process, another computer over the network/internet
+%	\item Multi-language programs (use Gray,Findler,Flatt?)
+%\end{enumerate}
 
 \subsection*{Background/History}
 \begin{enumerate}
-	\item \Dynamic is essentially an infinite disjoint union
+	\item As you can tell from the print example, the type \Dynamic is essentially an infinite disjoint union, or in terms of HTDP, it's an infinite data definition that can be any possible value.
 	\item languages with (finite) disjoint union: Algol-68, Pascal (tagged variant record)
 	\item languages infinite disjoint union: Simula-67's subclass structure (INSPECT statement allows program to determine subclass of a value at run time)
 	\item languages with dynamic typing in static context: CLU (\code{any} type/force), Cedar/Mesa (REFANY/TYPECASE), Modula-2+, Modula-3 (from Cedar/Mesa) -- these languages wanted to support programming idioms from LISP
@@ -56,71 +144,94 @@
 	\item languages with mechanisms for handling persistent data: Amber, Modula-2+ (pickling)
 \end{enumerate}
 
-\subsection*{Abadi, et al. (1989/1991) - Dynamic Typing in a Statically Typed Language}
-\begin{enumerate}
-	\item Introduce new datatype \Dynamic whose values pairs of value \texttt{v} and type tag \texttt{T} (so \Dynamic values carry type information at runtime) -- like an infinite disjoint union (sum type) -- allow values of different types to be manipulated uniformly
-	\item \code{(dynamic\;e:T)} construct creates \Dynamic values and \typecase construct eliminates
-	\item \typecase example:
-	\begin{verbatim}
-	tostring: Dynamic -> String
-	  \dv:Dynamic.
-	    typecase dv of
-	      (v:String) (string-append '"' v '"')
-	      (n:Nat) (natToStr n)
-	      (X,Y)(f:X -> Y) "<function>"
-	      (X,Y)(p:X x Y)
-	        (string-append "<" (tostring (dynamic (fst p):X) ","
-	                           (tostring (dynamic (snd p):Y) ">")
-	      (d:Dynamic) (string-append "dynamic" (tostring d)
-	      else "unknown"
-	    end
-	\end{verbatim}
-	nested \typecase example:
-	\begin{verbatim}
-	\df:Dynamic.\de:Dynamic.
-	  typecase df of
-	    (X,Y)(f:X -> Y)
-	      typecase de of
-	        (e:X) (dynamic (f e):Y)
-	        else (dynamic "Error":String)
-	      end
-	    else (dynamic "Error":String)
-	  end
-	\end{verbatim}
-	\item Contribution: formal description of language with \Dynamic values -- cbv simply-typed lambda calculus + \dynamic and \typecase
-	\item typecheck and eval rules for \dynamic:\\
-	\inferrule{\Gamma \vdash e:T}{\Gamma\vdash(\dynamic\;e:T):\Dynamic}
-	\inferrule{\vdash e \Rightarrow v}{\vdash(\dynamic\;e:T)\Rightarrow(\dynamic\;v:T)}
-	\item typecheck and eval rules for \typecase:\\
-	\inferrule{\Gamma \vdash e:\Dynamic \\\\ 
-	           \forall i,\forall\sigma\in Subst_{\vec{X_i}} \; \Gamma[x_i \leftarrow T_i\sigma]\vdash e_i\sigma:T \\\\
-	           \Gamma\vdash e_{else}:T}
-	          {\Gamma\vdash(\typecase\;e\;\texttt{of} \\\\
-	                        \ldots(\vec{X_i})(x_i:T_i)\;e_i\ldots\\\\
-	                        \texttt{else}\; e_{else}\\\\
-	                        \texttt{end}):T}\\
-	 \inferrule{\vdash\;e\Rightarrow(\dynamic\;w:T)\\\\
-	            \forall j<k.match(T,T_j) \textrm{fails}\\\\
-	            match(T,T_k) = \sigma\\\\
-	            \vdash e_k\sigma[x_k\leftarrow w]\Rightarrow v}
-	           {\vdash(\typecase\;e\;\texttt{of}\\\\
-	            \ldots(\vec{X_i})(x_i:T_i)\;e_i\ldots\\\\
-	            \texttt{else}\; e_{else}\\\\
-	            \texttt{end})\Rightarrow v}
-	 \inferrule{\vdash\;e\Rightarrow(\dynamic\;w:T)\\\\
-	            \forall k.match(T,T_k) \textrm{fails}\\\\
-	            \vdash e_{else}\Rightarrow v}
-	           {\vdash(\typecase\;e\;\texttt{of}\\\\
-	            \ldots(\vec{X_i})(x_i:T_i)\;e_i\ldots\\\\
-	            \texttt{else}\; e_{else}\\\\
-	            \texttt{end})\Rightarrow v}
-	\item Theorem: $\forall e, v, T$, if $\vdash e \Rightarrow v$ and $\vdash e:T$, then $v:T$\\
+Here is another example, that illustrates that the type variables declared in a pattern are in scope for the entire body of the branch:
+\begin{verbatim}
+\df:Dynamic.\de:Dynamic.
+  typecase df of
+    (X,Y)(f:X -> Y)
+      typecase de of
+        (e:X) (dynamic (f e):Y)
+        else (dynamic "Error":String)
+      end
+    else (dynamic "Error":String)
+  end
+\end{verbatim}
+
+Theorem (soundness): $\forall e, v, T$, if $\vdash e \Rightarrow v$ and $\vdash e:T$, then $v:T$\\
 	      Corollary: $\forall e, v, T$ if $\vdash e \Rightarrow v$ and $\vdash e:T$, then $v \neq$ \wrong (because \wrong is not well-typed)
-	\item Authors give denotational semantics -- difficulty is assigning meaning to \Dynamic values -- use ideal model of types and Banach Fixed Point theorem from MacQueen, Plotkin, Sethi (1986)
-	\item Typechecking is sound: If $e$ is well typed, then $\deno{e}_\rho \neq \wrong$ (for well-behaved $\rho$)\\
+
+Authors also give denotational semantics -- difficulty is assigning meaning to \Dynamic values -- use ideal model of types and Banach Fixed Point theorem from MacQueen, Plotkin, Sethi (1986)
+
+Theorems: Typechecking is sound: If $e$ is well typed, then $\deno{e}_\rho \neq \wrong$ (for well-behaved $\rho$)\\
 	                             proved via: $\forall\Gamma,e,\rho,T$ ($\rho$ consistent with $\Gamma$ on $e$), if $\Gamma\vdash e:T$ then $\deno{e}_\rho \in \deno{T}$\\
 	      Evaluation is sound: If $\vdash e \Rightarrow v$, then $\deno{e} = \deno{v}$
-\end{enumerate}
+
+
+\subsection*{Abadi, et al. (1989/1991) - Dynamic Typing in a Statically Typed Language}
+%\begin{enumerate}
+%	\item Introduce new datatype \Dynamic whose values pairs of value \texttt{v} and type tag \texttt{T} (so \Dynamic values carry type information at runtime) -- like an infinite disjoint union (sum type) -- allow values of different types to be manipulated uniformly
+%	\item \code{(dynamic\;e:T)} construct creates \Dynamic values and \typecase construct eliminates
+%	\item \typecase example:
+%	\begin{verbatim}
+%	tostring: Dynamic -> String
+%	  \dv:Dynamic.
+%	    typecase dv of
+%	      (v:String) (string-append '"' v '"')
+%	      (n:Nat) (natToStr n)
+%	      (X,Y)(f:X -> Y) "<function>"
+%	      (X,Y)(p:X x Y)
+%	        (string-append "<" (tostring (dynamic (fst p):X) ","
+%	                           (tostring (dynamic (snd p):Y) ">")
+%	      (d:Dynamic) (string-append "dynamic" (tostring d)
+%	      else "unknown"
+%	    end
+%	\end{verbatim}
+%	nested \typecase example:
+%	\begin{verbatim}
+%	\df:Dynamic.\de:Dynamic.
+%	  typecase df of
+%	    (X,Y)(f:X -> Y)
+%	      typecase de of
+%	        (e:X) (dynamic (f e):Y)
+%	        else (dynamic "Error":String)
+%	      end
+%	    else (dynamic "Error":String)
+%	  end
+%	\end{verbatim}
+%	\item Contribution: formal description of language with \Dynamic values -- cbv simply-typed lambda calculus + \dynamic and \typecase
+%	\item typecheck and eval rules for \dynamic:\\
+%	\inferrule{\Gamma \vdash e:T}{\Gamma\vdash(\dynamic\;e:T):\Dynamic}
+%	\inferrule{\vdash e \Rightarrow v}{\vdash(\dynamic\;e:T)\Rightarrow(\dynamic\;v:T)}
+%	\item typecheck and eval rules for \typecase:\\
+%	\inferrule{\Gamma \vdash e:\Dynamic \\\\ 
+%	           \forall i,\forall\sigma\in Subst_{\vec{X_i}} \; \Gamma[x_i \leftarrow T_i\sigma]\vdash e_i\sigma:T \\\\
+%	           \Gamma\vdash e_{else}:T}
+%	          {\Gamma\vdash(\typecase\;e\;\texttt{of} \\\\
+%	                        \ldots(\vec{X_i})(x_i:T_i)\;e_i\ldots\\\\
+%	                        \texttt{else}\; e_{else}\\\\
+%	                        \texttt{end}):T}\\
+%	 \inferrule{\vdash\;e\Rightarrow(\dynamic\;w:T)\\\\
+%	            \forall j<k.match(T,T_j) \textrm{fails}\\\\
+%	            match(T,T_k) = \sigma\\\\
+%	            \vdash e_k\sigma[x_k\leftarrow w]\Rightarrow v}
+%	           {\vdash(\typecase\;e\;\texttt{of}\\\\
+%	            \ldots(\vec{X_i})(x_i:T_i)\;e_i\ldots\\\\
+%	            \texttt{else}\; e_{else}\\\\
+%	            \texttt{end})\Rightarrow v}
+%	 \inferrule{\vdash\;e\Rightarrow(\dynamic\;w:T)\\\\
+%	            \forall k.match(T,T_k) \textrm{fails}\\\\
+%	            \vdash e_{else}\Rightarrow v}
+%	           {\vdash(\typecase\;e\;\texttt{of}\\\\
+%	            \ldots(\vec{X_i})(x_i:T_i)\;e_i\ldots\\\\
+%	            \texttt{else}\; e_{else}\\\\
+%	            \texttt{end})\Rightarrow v}
+%	\item Theorem: $\forall e, v, T$, if $\vdash e \Rightarrow v$ and $\vdash e:T$, then $v:T$\\
+%	      Corollary: $\forall e, v, T$ if $\vdash e \Rightarrow v$ and $\vdash e:T$, then $v \neq$ \wrong (because \wrong is not well-typed)
+%	\item Authors give denotational semantics -- difficulty is assigning meaning to \Dynamic values -- use ideal model of types and Banach Fixed Point theorem from MacQueen, Plotkin, Sethi (1986)
+%	\item Typechecking is sound: If $e$ is well typed, then $\deno{e}_\rho \neq \wrong$ (for well-behaved $\rho$)\\
+%	                             proved via: $\forall\Gamma,e,\rho,T$ ($\rho$ consistent with $\Gamma$ on $e$), if $\Gamma\vdash e:T$ then $\deno{e}_\rho \in \deno{T}$\\
+%	      Evaluation is sound: If $\vdash e \Rightarrow v$, then $\deno{e} = \deno{v}$
+%\end{enumerate}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Abadi, et al. (1995) Dynamic Typing in Polymorphic Languages
@@ -129,22 +240,36 @@
 
 %% Explicit Polymorphism
 \subsubsection*{Explicit Polymorphism}
-\begin{enumerate}
-	\item Contribution: add explicit polymorphism to language with \Dynamic -- get type abstractions $(\Lambda)$
-	\item example:
-	\begin{alltt}
-	squarePolyFun = 
-	  \(\lambda\)df:Dynamic
-	    typecase df of
-	      (f:\(\forall\)Z.Z\(\rightarrow\)Int)
-	        \(\Lambda\)W.\(\lambda\)x:W.f[W](x)*f[W](x)
-	      else \(\Lambda\)W.\(\lambda\)x:W.0
-	\end{alltt}
-	\item need second-order pattern variables that can be type operators in \typecase, example:
+Most statically typed functional languages allow polymorphic types. So in their second paper, Abadi et al. add \Dynamic values to a language with polymorphism. Here's an example of what you can do with polymorphic types. Here we are trying to match a polymorphic function that can consume any type and produces an integer. Now that we have a polymorphic language, we can abstract over types, that's what this big lambda is. And the result is a polymorphic function that applies f to the argument and squares the result.
+
+\begin{alltt}
+squarePolyFun = 
+  \(\lambda\)df:Dynamic
+    typecase df of
+      (f:\(\forall\)Z.Z\(\rightarrow\)Int)
+        \(\Lambda\)W.\(\lambda\)x:W.f[W](x)*f[W](x)
+      else \(\Lambda\)W.\(\lambda\)x:W.0
+\end{alltt}
+
+However, with polymorphism, our type variables are not expressive enough to capture some patterns. For example, if we try to implement the dynamic apply function from before:
+
 	\begin{alltt}
 	dynamicApply = 
 	  \(\lambda\)df:Dynamic.\(\lambda\)da:Dynamic.
-	    typecase fg of
+	    typecase df of
+	      \{\} (f:\(\forall\)Z.??\(\rightarrow\)??)
+	        typecase da of
+	          \{W\} (a:W)
+	            dynamic( f[W](a):?? )
+	\end{alltt}
+
+What types do we give the input and output of f? Remember, we need to be able to match all functions, so something like this: \code{\Lambda\tau.\lambda x:\tau\times\tau.\ldots}, and \code{\Lambda\tau.\lambda x:\tau\rightarrow\tau.\ldots}
+
+We need second-order pattern variables that can be type operators in \typecase, example:
+	\begin{alltt}
+	dynamicApply = 
+	  \(\lambda\)df:Dynamic.\(\lambda\)da:Dynamic.
+	    typecase df of
 	      \{F,G\} (f:\(\forall\)Z.F(Z)\(\rightarrow\)G(Z))
 	        typecase da of
 	          \{W\} (a:F(W))
@@ -156,46 +281,93 @@
 	but if \code{df = dynamic(\;\Lambda Z.\lambda x:Z\rightarrow Z.x:\ldots\;)} \\
 	and \code{da = dynamic(\lambda x:Int.x:\ldots)} \\
 	then \code{F = \Lambda X.X \rightarrow X}, \code{G = \Lambda X.X\rightarrow X}, and \code{W = Int} \\
+
+But adding high-order pattern variables causes a problem where matching may not be unique. Authors fix this problem by restricting pattern variables to be second order and this allows them to devise a unique matching alg.
+
+Authors do not give type rules or evaluation rules or prove soundness for language with explicit polymorphism.
+
+In the language just presented, you construct \Dynamic values in the same way as in the previous paper, by giving the constructor a value and an explicit type tag. But some languages with static type systems don't require any type tags, so the authors also add \Dynamic to a language with implicit polymorphism.
+
+So what are the differences in a language with implicit polymorphism. The first obvious difference is that the constructor only takes one parameter now, the expression itself. The \Dynamic value still contains a type tag, but this type is now inferred from the given expression.
+
+This requires a change to our matching algorithm because instead of matching an exact type we must be able to match a more general type to a less general pattern. For example, if I have the pattern \code{lst:int\;list}, I should be able to match a \Dynamic that contains the empty list, which has type \code{\forall\alpha.\alpha\;list}. And this makes intuitive sense because in the explicit language, I could have created a \Dynamic with the empty list and given it the type \code{int\;list} but in the implicit language, the most general type is always inferred. The authors call this property of matching more general types the tag instantiation property.
+
+But there is a problem when you have tag instantiation and second order pattern variables, because second order pattern variables can depend on universal variables, but tag instantiation requires matching with more general types, so you dont know how many universal variables there will be. 
+	Example:
+	Tag \code{\forall A.(A\times A)\rightarrow A} matches pattern \code{\{F\}(f:\forall A.F(A)\rightarrow A)} with \code{F = \Lambda X.X\times X} but tag \code{\forall A,B.(A\times B)\rightarrow A} should also match the pattern because it is more general, but \texttt{F} does not depend on \texttt{B} (\code{F = \Lambda X.X \times ??}).
 	
-	\item Formally, \Dynamic values added to System $F_\omega$ (simply-typed lambda calculus + type abstractions + type operators)
-	\item Having higher order pattern variables in \typecase allows ambiguous matches - example: pattern \code{F(Int)} matches tag \code{Int} with either \code{F=\Lambda X.X} or \code{F=\Lambda X.Int}.
-	\item So patterns must be restricted so that they match any tag uniquely (this property is called definiteness) - restrict language to only second-order polymorphism
-	\item Authors go not give typing or evaluation rules for explicit polymorphism
-\end{enumerate}
+	Solution is to capture variables that appear in tag but not in a pattern in a tuple \code{P} and have all pattern variables depend on \code{P}. So pattern \code{\{F\}(f:\forall A.F(A)\rightarrow A)} is actually  \code{\{F\}(f:\forall A.F(A;P)\rightarrow A)}. \code{P} gets instantiated at run time. For the previously mentioned tag \code{\forall A,B.(A\times B)\rightarrow A}, \code{P} gets instantiated to \code{(B)}. Since arity of \code{P} is not known at compile type, a special tuple sort must be introduced. (Show type rules?)
+	
+	Authors give typechecking and evaluation rules for implicit polymorphic language with \Dynamic but do not prove any theorems.
+	
+	
+%\begin{enumerate}
+%	\item Contribution: add explicit polymorphism to language with \Dynamic -- get type abstractions $(\Lambda)$
+%	\item example:
+%	\begin{alltt}
+%	squarePolyFun = 
+%	  \(\lambda\)df:Dynamic
+%	    typecase df of
+%	      (f:\(\forall\)Z.Z\(\rightarrow\)Int)
+%	        \(\Lambda\)W.\(\lambda\)x:W.f[W](x)*f[W](x)
+%	      else \(\Lambda\)W.\(\lambda\)x:W.0
+%	\end{alltt}
+%	\item need second-order pattern variables that can be type operators in \typecase, example:
+%	\begin{alltt}
+%	dynamicApply = 
+%	  \(\lambda\)df:Dynamic.\(\lambda\)da:Dynamic.
+%	    typecase df of
+%	      \{F,G\} (f:\(\forall\)Z.F(Z)\(\rightarrow\)G(Z))
+%	        typecase da of
+%	          \{W\} (a:F(W))
+%	            dynamic( f[W](a):G(W) )
+%	\end{alltt}
+%	if \code{df = dynamic(\;\Lambda Z.\lambda x:Z\times Z.\pair{snd(x)}{fst(x)}:\ldots\;)} \\
+%	and \code{da = dynamic(\pair{3}{4}:\ldots)} \\
+%	then \code{F = \Lambda X.X \times X}, \code{G = \Lambda X.X \times X}, and \code{W = Int} \\
+%	but if \code{df = dynamic(\;\Lambda Z.\lambda x:Z\rightarrow Z.x:\ldots\;)} \\
+%	and \code{da = dynamic(\lambda x:Int.x:\ldots)} \\
+%	then \code{F = \Lambda X.X \rightarrow X}, \code{G = \Lambda X.X\rightarrow X}, and \code{W = Int} \\
+%	
+%	\item Formally, \Dynamic values added to System $F_\omega$ (simply-typed lambda calculus + type abstractions + type operators)
+%	\item Having higher order pattern variables in \typecase allows ambiguous matches - example: pattern \code{F(Int)} matches tag \code{Int} with either \code{F=\Lambda X.X} or \code{F=\Lambda X.Int}.
+%	\item So patterns must be restricted so that they match any tag uniquely (this property is called definiteness) - restrict language to only second-order polymorphism
+%	\item Authors go not give typing or evaluation rules for explicit polymorphism
+%\end{enumerate}
 
 %% Implicit Polymorphism
 \subsubsection*{Implicit Polymorphism}
-\begin{enumerate}
-	\item In a language with implicit polymorphism (like ML), some changes need to be made to matching algorithm
-	\item \dynamic construct only takes one parameter -- no type tag -- typechecker infers most general type
-	\item in \typecase, matched value must be able to be instantiated differently for different uses.
-	example:
-	\begin{alltt}
-	foo = \(\lambda\)df.
-	  typecase df of
-	    (f:\(\forall\)A.(A\(\rightarrow\)A)\(\rightarrow\)(A\(\rightarrow\)A)\(\pair{\mathtt{f add1}}{\mathtt{f not}}\)
-	  else \(\ldots\)
-	\end{alltt}
-	\item languages with type inference always infer the most general type, but if there were explicit type tags in \Dynamic values, the programmer could have given a less general type so patterns should always match type tags that are more general than the pattern -- called tag instantiation
-	\item first order pattern variables not expressive enough to match some examples so we add second order pattern variables like before that can be instantiated to type operators. Example where second order pattern variables are needed:
-	\begin{alltt}
-	applyTwice = \(\lambda\)df.\(\lambda\)dxy.
-	  typecase df of
-	    \{F,F'\} (f:F(P)->F'(P))
-	      typecase dxy of
-	        \{G,H\} (\(\pairtt{x}{y}\):F(G(Q)) \(\times\) F(H(Q)))
-	          \(\pairtt{f x}{f y}\)
-	      else ...
-	   else ...
-	\end{alltt}
-	\item tag instantiation and second-order pattern variables cause some problems when used together. Second order pattern variables can depend on universal variables, but tag instantiation requires matching with more general types, so you dont know how many universal variables there will be. 
-	Example:
-	Tag \code{\forall A.(A\times A)\rightarrow A} matches pattern \code{\{F\}(f:\forall A.F(A)\rightarrow A)} with \code{F = \Lambda X.X\times X} but tag \code{\forall A,B.(A\times B)\rightarrow A} should also match the pattern because it is more general, but \texttt{F} does not depend on \texttt{B} (\code{F = \Lambda X.X \times ??}).
-	\item Solution is to capture variables that appear in tag but not in a pattern in a tuple \code{P} and have all pattern variables depend on \code{P}. So pattern \code{\{F\}(f:\forall A.F(A)\rightarrow A)} is actually  \code{\{F\}(f:\forall A.F(A;P)\rightarrow A)}. \code{P} gets instantiated at run time. For the previously mentioned tag \code{\forall A,B.(A\times B)\rightarrow A}, \code{P} gets instantiated to \code{(B)}. Since arity of \code{P} is not known at compile type, a special tuple sort must be introduced. (Show type rules?)
-	\item authors give typechecking and evaluation rules for implicit polymorphic language with \Dynamic but do not prove any theorems
-	
-	
-\end{enumerate}
+%\begin{enumerate}
+%	\item In a language with implicit polymorphism (like ML), some changes need to be made to matching algorithm
+%	\item \dynamic construct only takes one parameter -- no type tag -- typechecker infers most general type
+%	\item in \typecase, matched value must be able to be instantiated differently for different uses.
+%	example:
+%	\begin{alltt}
+%	foo = \(\lambda\)df.
+%	  typecase df of
+%	    (f:\(\forall\)A.(A\(\rightarrow\)A)\(\rightarrow\)(A\(\rightarrow\)A)\(\pair{\mathtt{f add1}}{\mathtt{f not}}\)
+%	  else \(\ldots\)
+%	\end{alltt}
+%	\item languages with type inference always infer the most general type, but if there were explicit type tags in \Dynamic values, the programmer could have given a less general type so patterns should always match type tags that are more general than the pattern -- called tag instantiation
+%	\item first order pattern variables not expressive enough to match some examples so we add second order pattern variables like before that can be instantiated to type operators. Example where second order pattern variables are needed:
+%	\begin{alltt}
+%	applyTwice = \(\lambda\)df.\(\lambda\)dxy.
+%	  typecase df of
+%	    \{F,F'\} (f:F(P)->F'(P))
+%	      typecase dxy of
+%	        \{G,H\} (\(\pairtt{x}{y}\):F(G(Q)) \(\times\) F(H(Q)))
+%	          \(\pairtt{f x}{f y}\)
+%	      else ...
+%	   else ...
+%	\end{alltt}
+%	\item tag instantiation and second-order pattern variables cause some problems when used together. Second order pattern variables can depend on universal variables, but tag instantiation requires matching with more general types, so you dont know how many universal variables there will be. 
+%	Example:
+%	Tag \code{\forall A.(A\times A)\rightarrow A} matches pattern \code{\{F\}(f:\forall A.F(A)\rightarrow A)} with \code{F = \Lambda X.X\times X} but tag \code{\forall A,B.(A\times B)\rightarrow A} should also match the pattern because it is more general, but \texttt{F} does not depend on \texttt{B} (\code{F = \Lambda X.X \times ??}).
+%	\item Solution is to capture variables that appear in tag but not in a pattern in a tuple \code{P} and have all pattern variables depend on \code{P}. So pattern \code{\{F\}(f:\forall A.F(A)\rightarrow A)} is actually  \code{\{F\}(f:\forall A.F(A;P)\rightarrow A)}. \code{P} gets instantiated at run time. For the previously mentioned tag \code{\forall A,B.(A\times B)\rightarrow A}, \code{P} gets instantiated to \code{(B)}. Since arity of \code{P} is not known at compile type, a special tuple sort must be introduced. (Show type rules?)
+%	\item authors give typechecking and evaluation rules for implicit polymorphic language with \Dynamic but do not prove any theorems
+%	
+%	
+%\end{enumerate}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Leroy and Mauny (JFP 1993) Dynamics in ML
@@ -329,11 +501,12 @@ ad-hoc restrictions on pattern variables         & simple interpretation in firs
 
 \end{tabular}
 
-\subsection*{Gray,Findler,Flatt - Fine-Grained Interoperability Through Mirrors and Contracts}
-
-
-\bibliographystyle{acm}
-\bibliography{dynamic}
+%\subsection*{Gray,Findler,Flatt - Fine-Grained Interoperability Through Mirrors and Contracts}
+%
+%The contribution of the paper is that it demonstrates fine-grained interoperability between Scheme and Java. The paper uses \Dynamic to add dynamically typed expressions to Java to make it more compatible with Scheme. In Java, method invocation is always tied to the static type of an object. Unlike languages like Smalltalk or Python, you can't call a method on an object unless it was statically known. The authors add a \dynamic type and objects with this type are not inspected until runtime to see if they implement a method that is called.
+%
+%\bibliographystyle{acm}
+%\bibliography{dynamic}
 
 
 \end{document} % THE INPUT FILE ENDS LIKE THIS
