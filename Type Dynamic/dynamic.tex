@@ -24,7 +24,7 @@
 
 \title{Type Dynamic}
 \author{Stephen Chang}
-\institute{HOPL, Spring 2010}
+\institute{}
 \date{2/26/2010}
 \maketitle
 
@@ -35,8 +35,7 @@
   author    = {Martin Abadi, Luca Cardelli, Benjamin C. Pierce, 
                and Gordon D. Plotkin},
   title     = {Dynamic Typing in a Statically Typed Language},
-  journal   = {ACM Trans. on Programming Languages and Systems 
-               (TOPLAS)},
+  journal   = {ACM Trans. on Programming Languages and Systems},
   volume    = {13},
   number    = {2},
   year      = {1991},
@@ -62,7 +61,7 @@
 
 \subsubsection*{Summary}
 
-Even in the most expressive statically-typed languages, there are always programs that will require run-time type information. An example of such a program is the \texttt{eval} function, whose ouput cannot be assigned a type at compile time. Abadi et al. introduce \Dynamic values to solve this problem. A \Dynamic value is a pair that contains a value and a type tag for that value. The authors also introduce the \typecase construct, which uses patterns to inspect \Dynamic values. The authors formalize \Dynamic values as an extension to the simply-typed lambda calculus and give both an operational semantics and a denotational semantics for their language. The authors independently prove the soundness of their type system using each semantics.
+Even in the most expressive statically-typed languages, there are always programs that will require run-time type information. An example of such a program is the \texttt{eval} function, whose ouput cannot be assigned a type at compile time. Abadi et al. introduce \Dynamic values to solve this problem. A \Dynamic value is a pair that contains a value and a type tag for that value. The authors also introduce the \typecase construct, which uses patterns to inspect \Dynamic values. The authors formalize \Dynamic values as an extension to the simply-typed lambda calculus and give both an operational semantics and a denotational semantics for their language. The authors also prove the soundness of their type system.
 
 Other languages have constructs similar to \Dynamic but this paper is the first to present a formal description of a language with \Dynamic values and is also the first to give a soundness proof for a type system that includes the \Dynamic type. In their conclusion, the authors briefly mention several possible extensions to their language such as polymorphism.
 
@@ -138,7 +137,7 @@ Even though the authors describe languages with both explicit and implicit polym
 @inproceedings{Leroy1991Dynamics,
   author    = {Xavier Leroy and Michel Mauny},
   title     = {Dynamics in ML},
-  booktitle = {FPCA},
+  booktitle = {Functional Prog. Languages and Comp. Architecture},
   year      = {1991},
   pages     = {406-426}
 }
