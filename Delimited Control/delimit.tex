@@ -1,0 +1,122 @@
+% dynamic.tex
+
+\documentclass[letterpaper]{llncs}
+%\documentclass[12pt]{article}	% YOUR INPUT FILE MUST CONTAIN THESE
+\usepackage{url}
+\usepackage{graphicx}
+%\oddsidemargin  -0.4in
+%\evensidemargin 0.0in
+%\textwidth      7in
+%\headheight     -0.5in
+%\topmargin      0.0in
+%\textheight     9.0in
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{xspace}
+
+
+
+\begin{document}							% TWO LINES PLUS THE \end COMMAND AT
+															% THE END
+
+\title{Delimited Control}
+\author{Stephen Chang}
+\institute{}
+\date{4/13/2010}
+\maketitle
+
+\subsection*{Constraining Control~\cite{Friedman1985ConstrainingControl}}
+
+\begin{verbatim}
+@inproceedings{Friedman1985ConstrainingControl,
+  author    = {Daniel P. Friedman and Christopher T. Haynes},
+  title     = {Constraining Control},
+  booktitle = {POPL},
+  year      = {1985},
+  pages     = {245-254},
+}
+\end{verbatim}
+
+\subsubsection*{Abstract}
+Continuations, when available as first-class objects, provide a general control abstraction in programming languages. They liberate the programmer from specific control structures, increasing programming language extensibility. Such continuations may be extended by embedding them in functional objects. This technique is first used to restore a fluid environment when a continuation object is invoked. We then consider techniques for constraining the power of continuations in the interest of security and efficiency. Domain mechanisms, which create dynamic barriers for enclosing control, are implemented using fluids. Domains are then used to implement an unwind-protect facility in the presence of first-class continuations. Finally, we demonstrate two mechanisms, wind-unwind and dynamic-wind, that generalize unwind-protect.
+
+
+
+
+
+\subsection*{The Theory and Practice of First-Class Prompts~\cite{Felleisen1998Prompts}}
+
+\begin{verbatim}
+@inproceedings{Felleisen1998Prompts,
+  author    = {Matthias Felleisen},
+  title     = {The Theory and Practice of First-Class Prompts},
+  booktitle = {POPL},
+  year      = {1988},
+  pages     = {180-190},
+}
+\end{verbatim}
+
+\subsubsection*{Abstract}
+
+An analysis of the $\lambda_v$-C-calculus and its problematic relationship to operational equivalence leads to a new control facility: the prompt-application. With the introduction of prompt-applications, the control calculus becomes a traditional calculus all of whose equations imply operational equivalence. In addition, prompt-applications enhance the expressiveness and efficiency of the language. We illustrate the latter claim with examples from such distinct areas as systems programming and tree processing.
+
+
+
+
+
+
+\subsection*{Control Delimiters and Their Hierarchies~\cite{Sitaram1990Hierarchies}}
+
+\begin{verbatim}
+@article{Sitaram1990Hierarchies,
+  author    = {Dorai Sitaram and Matthias Felleisen},
+  title     = {Control Delimiters and Their Hierarchies},
+  journal   = {Lisp and Symbolic Computation},
+  volume    = {3},
+  number    = {1},
+  year      = {1990},
+  pages     = {67-99},
+}
+\end{verbatim}
+
+\subsubsection*{Abstract}
+
+Since control operators for the \textit{unrestricted} transfer of control are too powerful in many situations, we propose the \textit{control delimiter} as a means for restricting control manipulations and study its use in Lisp- and Scheme-like languages. In a Common Lisp-like setting, the concept of delimiting control provides a well-suited terminology for explaining different control constructs. For higher-order languages like Scheme, the control delimiter is the means for embedding Lisp control constructs faithfully and for realizing high-level control abstractions elegantly. A deeper analysis of the examples suggests a need for an entire \textit{control hierarchy} of such delimiters. We show how to implement such a hierarchy on top of the simple version of a control delimiter.
+
+
+
+
+
+\subsection*{Abstracting Control~\cite{Danvy1990AbstractingControl}}
+
+\begin{verbatim}
+@inproceedings{Danvy1990AbstractingControl,
+  author    = {Olivier Danvy and Andrzej Filinski},
+  title     = {Abstracting Control},
+  booktitle = {LISP and Functional Programming},
+  year      = {1990},
+  pages     = {151-160},
+}
+\end{verbatim}
+
+
+\subsubsection*{Abstract}
+The last few years have seen a renewed interest in continuations for expressing advanced control structures in programming languages, and new models such as Abstract Continuations have been proposed to capture these dimensions. This article investigates an alternative formulation, exploiting the latent expressive power of the standard continuation-passing style (CPS) instead of introducing yet other new concepts. We build on a single foundation: abstracting control as a \textit{hierarchy} of continuations, each one modeling a specific language feature as acting on nested \textit{evaluation contexts}. 
+
+We show how \textit{iterating} the continuation-passing conversion allows us to specify a wide range of control behavior. For example, two conversions yield an abstraction of Prolog-style backtracking. A number of other constructs can likewise be expressed in this framework; each is defined independently of the others, but all are arranged in a hierarchy making any interactions between them explicit. 
+
+This approach preserves all the traditional results about CPS, e.g., its evaluation order independence. Accordingly, our semantics is directly implementable in a call-by-value language such as Scheme or ML. Furthermore, because the control operators denote simple, typable lambda-terms in CPS, they themselves can be statically typed. Contrary to intuition, the iterated CPS transformation does not yield huge results: except where explicitly needed, all continuations beyond the first one disappear due to the extensionality principle ($\eta$-reduction). 
+
+Besides presenting a new motivation for control operators, this paper also describes an improved conversion into applicative-order CPS. The conversion operates in one pass by performing all administrative reductions at translation time; interestingly, it can be expressed very concisely using the new control operators. The paper also presents some examples of nondeterministic programming in direct style.  
+
+
+
+
+
+
+
+\bibliographystyle{acm}
+\bibliography{delimit}
+
+
+\end{document} % THE INPUT FILE ENDS LIKE THIS
