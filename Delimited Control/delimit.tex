@@ -25,7 +25,7 @@
 \date{4/13/2010}
 \maketitle
 
-\subsection*{Constraining Control~\cite{Friedman1985ConstrainingControl}}
+\section*{Constraining Control}%~\cite{Friedman1985ConstrainingControl}
 
 \begin{verbatim}
 @inproceedings{Friedman1985ConstrainingControl,
@@ -37,14 +37,14 @@
 }
 \end{verbatim}
 
-\subsubsection*{Abstract}
+\subsection*{Abstract}
 Continuations, when available as first-class objects, provide a general control abstraction in programming languages. They liberate the programmer from specific control structures, increasing programming language extensibility. Such continuations may be extended by embedding them in functional objects. This technique is first used to restore a fluid environment when a continuation object is invoked. We then consider techniques for constraining the power of continuations in the interest of security and efficiency. Domain mechanisms, which create dynamic barriers for enclosing control, are implemented using fluids. Domains are then used to implement an unwind-protect facility in the presence of first-class continuations. Finally, we demonstrate two mechanisms, wind-unwind and dynamic-wind, that generalize unwind-protect.
 
 
 
 
 
-\subsection*{The Theory and Practice of First-Class Prompts~\cite{Felleisen1998Prompts}}
+\section*{The Theory and Practice of First-Class Prompts}%~\cite{Felleisen1998Prompts}
 
 \begin{verbatim}
 @inproceedings{Felleisen1998Prompts,
@@ -56,8 +56,7 @@ Continuations, when available as first-class objects, provide a general control 
 }
 \end{verbatim}
 
-\subsubsection*{Abstract}
-
+\subsection*{Abstract}
 An analysis of the $\lambda_v$-C-calculus and its problematic relationship to operational equivalence leads to a new control facility: the prompt-application. With the introduction of prompt-applications, the control calculus becomes a traditional calculus all of whose equations imply operational equivalence. In addition, prompt-applications enhance the expressiveness and efficiency of the language. We illustrate the latter claim with examples from such distinct areas as systems programming and tree processing.
 
 
@@ -65,7 +64,7 @@ An analysis of the $\lambda_v$-C-calculus and its problematic relationship to op
 
 
 
-\subsection*{Control Delimiters and Their Hierarchies~\cite{Sitaram1990Hierarchies}}
+\section*{Control Delimiters and Their Hierarchies}%~\cite{Sitaram1990Hierarchies}
 
 \begin{verbatim}
 @article{Sitaram1990Hierarchies,
@@ -79,15 +78,14 @@ An analysis of the $\lambda_v$-C-calculus and its problematic relationship to op
 }
 \end{verbatim}
 
-\subsubsection*{Abstract}
-
+\subsection*{Abstract}
 Since control operators for the \textit{unrestricted} transfer of control are too powerful in many situations, we propose the \textit{control delimiter} as a means for restricting control manipulations and study its use in Lisp- and Scheme-like languages. In a Common Lisp-like setting, the concept of delimiting control provides a well-suited terminology for explaining different control constructs. For higher-order languages like Scheme, the control delimiter is the means for embedding Lisp control constructs faithfully and for realizing high-level control abstractions elegantly. A deeper analysis of the examples suggests a need for an entire \textit{control hierarchy} of such delimiters. We show how to implement such a hierarchy on top of the simple version of a control delimiter.
 
 
 
 
 
-\subsection*{Abstracting Control~\cite{Danvy1990AbstractingControl}}
+\section*{Abstracting Control}%~\cite{Danvy1990AbstractingControl}
 
 \begin{verbatim}
 @inproceedings{Danvy1990AbstractingControl,
@@ -100,7 +98,7 @@ Since control operators for the \textit{unrestricted} transfer of control are to
 \end{verbatim}
 
 
-\subsubsection*{Abstract}
+\subsection*{Abstract}
 The last few years have seen a renewed interest in continuations for expressing advanced control structures in programming languages, and new models such as Abstract Continuations have been proposed to capture these dimensions. This article investigates an alternative formulation, exploiting the latent expressive power of the standard continuation-passing style (CPS) instead of introducing yet other new concepts. We build on a single foundation: abstracting control as a \textit{hierarchy} of continuations, each one modeling a specific language feature as acting on nested \textit{evaluation contexts}. 
 
 We show how \textit{iterating} the continuation-passing conversion allows us to specify a wide range of control behavior. For example, two conversions yield an abstraction of Prolog-style backtracking. A number of other constructs can likewise be expressed in this framework; each is defined independently of the others, but all are arranged in a hierarchy making any interactions between them explicit. 
