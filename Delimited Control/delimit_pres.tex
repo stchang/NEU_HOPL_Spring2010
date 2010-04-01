@@ -14,7 +14,11 @@
 \usepackage{amsmath}
 \usepackage{xspace}
 
-
+\newcommand{\F}{ \ensuremath{ \mathcal{F} } }
+\newcommand{\lamdavC}{ \ensuremath{ \lambda_v\!\!-\!\!C } }
+\newcommand{\cek}[3]{ \ensuremath{ \left\langle \; #1, \; #2, \; #3 \; \right\rangle } }
+\newcommand{\cekstep}{ \ensuremath{ \stackrel{CEK}{\longmapsto} } }
+\newcommand{\clos}[2]{ \ensuremath{ \left\langle \; #1, \; #2 \; \right\rangle } }
 
 \begin{document}							% TWO LINES PLUS THE \end COMMAND AT
 															% THE END
@@ -24,6 +28,9 @@
 \institute{}
 \date{4/13/2010}
 \maketitle
+
+\section*{call/cc}
+
 
 \section*{History}
 
@@ -152,7 +159,58 @@ Of course, this example is not completely robust in that descendants of the cont
 \subsection*{Abstract}
 An analysis of the $\lambda_v$-C-calculus and its problematic relationship to operational equivalence leads to a new control facility: the prompt-application. With the introduction of prompt-applications, the control calculus becomes a traditional calculus all of whose equations imply operational equivalence. In addition, prompt-applications enhance the expressiveness and efficiency of the language. We illustrate the latter claim with examples from such distinct areas as systems programming and tree processing.
 
+Prompts introduced to address problem with Felleisen's $\lambda_v\!\!-\!\!C$ calculus~\cite{Felleisen1987SyntacticTheory}
+	
+\subsection*{$\lamdavC$ calculus}
 
+\begin{enumerate}
+
+	\item $\lambda_v\!\!-\!\!C$ calculus terms:
+	
+$$M ::= c \mid x \mid \lambda x.M \mid M N \mid \F M$$
+
+$\F$ operator is like call/cc - evaluates argument and then applies it to current continuation
+	
+	\item Notions of reduction for $\F$:
+	
+	$$\F_L: (\F M) N \rightarrow \F (\lambda k.M (\lambda m.k (m N))))$$
+	$$\F_R: V (\F M) \rightarrow \F (\lambda K.M (\lambda m.k (V m))))$$
+
+``Purpose of these reductions is to push $\F$ to the root of a term and to encode the context of the $\F$ application as an abstraction. Essentially, the rules are building up the abstraction that represents the continuation one frame at a time.
+
+	\item
+
+Once the $\F$ reaches the root, then we can get rid of it with the rule:
+
+$$\F M \triangleright M (\lambda x.x)$$
+
+What the rule is saying that the last context is just the identify context (a hole).
+
+	\item However, the $\F$ elimination rule causes problems when trying to prove operational equivalence of the calculus - ie, two terms that evaluate to the same value can behave differently when placed in the same context. Example: $\F (\lambda d.0)$ vs 0. First term aborts current context and evaluates to 0 while second one just evaluates to 0 in the current context.
+	
+	\item To fix the operational equivalent problem, a ``prompt'' operator \# is added to the calculus, along with an accompanying reduction rule:
+	
+	$$M ::= c \mid x \mid \lambda x.M \mid M N \mid \F M$$
+
+	$$\#_\F: (\# (\F M)) \rightarrow (\# (M (\lambda x.x)))$$
+	
+	However, now prompts are first class. They can appear anything in a term. This will prove to be quite useful.
+	
+	\item CEK machine transistions for $\F$ and \#:
+	
+	$$\cek{ \# M }{ \rho }{ \kappa } 
+	      \cekstep 
+	  \cek{ M }{ \rho }{ (\kappa \; \textbf{mark}) }$$
+	
+	$$\cek{ \F M }{ \rho }{ \kappa } 
+	      \cekstep 
+	  \cek{ M \gamma }{ \rho[\gamma := \clos{ \textbf{p} }{ \otimes \kappa }] }{ \ominus \kappa }$$
+	
+	Boldface words are tags. Prompt marks the stack. Mark is removed after sub-evaluation terminates $\otimes$ operator copies the stack up to the next mark. $\ominus$ operator deletes the stack up the next mark.
+	
+	
+
+\end{enumerate}
 
 
 
