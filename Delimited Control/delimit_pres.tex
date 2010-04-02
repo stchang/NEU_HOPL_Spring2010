@@ -19,6 +19,10 @@
 \newcommand{\cek}[3]{ \ensuremath{ \left\langle \; #1, \; #2, \; #3 \; \right\rangle } }
 \newcommand{\cekstep}{ \ensuremath{ \stackrel{CEK}{\longmapsto} } }
 \newcommand{\clos}[2]{ \ensuremath{ \left\langle \; #1, \; #2 \; \right\rangle } }
+\newcommand{\app}[2]{ \ensuremath{ #1 \; #2 } }
+\newcommand{\appp}[2]{ \ensuremath{ (\app{#1}{#2}) } }
+\newcommand{\lam}[2]{ \ensuremath{ \lambda #1.#2 } }
+\newcommand{\lamp}[2]{ \ensuremath{ (\lam{#1}{#2}) } }
 
 \begin{document}							% TWO LINES PLUS THE \end COMMAND AT
 															% THE END
@@ -31,11 +35,14 @@
 
 \section*{call/cc}
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% History
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{History}
 
 \begin{enumerate}
 	\item LISP - catch and throw - not first class - can only throw once to each catch
+	\item LISP - errorset
 	\item call/cc
 	\item Landin's J
 	\item Reynolds - escape
@@ -159,6 +166,8 @@ Of course, this example is not completely robust in that descendants of the cont
 \subsection*{Abstract}
 An analysis of the $\lambda_v$-C-calculus and its problematic relationship to operational equivalence leads to a new control facility: the prompt-application. With the introduction of prompt-applications, the control calculus becomes a traditional calculus all of whose equations imply operational equivalence. In addition, prompt-applications enhance the expressiveness and efficiency of the language. We illustrate the latter claim with examples from such distinct areas as systems programming and tree processing.
 
+\subsection*{Summary}
+
 Prompts introduced to address problem with Felleisen's $\lambda_v\!\!-\!\!C$ calculus~\cite{Felleisen1987SyntacticTheory}
 	
 \subsection*{$\lamdavC$ calculus}
@@ -167,10 +176,20 @@ Prompts introduced to address problem with Felleisen's $\lambda_v\!\!-\!\!C$ cal
 
 	\item $\lambda_v\!\!-\!\!C$ calculus terms:
 	
-$$M ::= c \mid x \mid \lambda x.M \mid M N \mid \F M$$
+$$M ::= c \mid x \mid \lam{x}{M} \mid \app{M}{N} \mid \app{\F}{M}$$
 
-$\F$ operator is like call/cc - evaluates argument and then applies it to current continuation
+$\F$ operator is like call/cc - evaluates argument and then applies it to current continuation. The key difference is that $\F$ itself aborts the current continuation, instead of the current continuation itself being abortive. Therefore: 
+
+$$\appp{ add1 }{ \appp{ \F }{ \lamp{k}{ \appp{ k }{ \appp{k}{1} } }}} = 3$$
+ but 
+$$\appp{ add1 }{ \appp{ call/cc }{ \lamp{k}{ \appp{ k }{ \appp{k}{1} } }}} = 2$$
 	
+and 
+
+$$\appp{ add1 }{ \appp{ \F }{ \lamp{k}{ 0 }}} = 0$$
+ but 
+$$\appp{ add1 }{ \appp{ call/cc }{ \lamp{k}{ 0 }}} = 1$$
+
 	\item Notions of reduction for $\F$:
 	
 	$$\F_L: (\F M) N \rightarrow \F (\lambda k.M (\lambda m.k (m N))))$$
@@ -186,11 +205,11 @@ $$\F M \triangleright M (\lambda x.x)$$
 
 What the rule is saying that the last context is just the identify context (a hole).
 
-	\item However, the $\F$ elimination rule causes problems when trying to prove operational equivalence of the calculus - ie, two terms that evaluate to the same value can behave differently when placed in the same context. Example: $\F (\lambda d.0)$ vs 0. First term aborts current context and evaluates to 0 while second one just evaluates to 0 in the current context.
+	\item However, the $\F$ elimination rule only applies when $\F$ is at the root and thus causes problems when trying to prove operational equivalence of the calculus because two terms that evaluate to the same value can behave differently when placed in the same context. Example: $\F (\lambda d.0)$ vs 0. First term aborts current context and evaluates to 0 while second one just evaluates to 0 in the current context.
 	
 	\item To fix the operational equivalent problem, a ``prompt'' operator \# is added to the calculus, along with an accompanying reduction rule:
 	
-	$$M ::= c \mid x \mid \lambda x.M \mid M N \mid \F M$$
+	$$M ::= c \mid x \mid \lambda x.M \mid M N \mid \F M \mid \# M$$
 
 	$$\#_\F: (\# (\F M)) \rightarrow (\# (M (\lambda x.x)))$$
 	
@@ -204,15 +223,32 @@ What the rule is saying that the last context is just the identify context (a ho
 	
 	$$\cek{ \F M }{ \rho }{ \kappa } 
 	      \cekstep 
-	  \cek{ M \gamma }{ \rho[\gamma := \clos{ \textbf{p} }{ \otimes \kappa }] }{ \ominus \kappa }$$
+	  \cek{ M \gamma }{ \rho[\gamma := \clos{ \textbf{p} }{ \oplus \kappa }] }{ \ominus \kappa }$$
+	  
+	$$\cek{ \ddagger }{ \emptyset }{ ((\kappa \; \textbf{fun} \clos{\textbf{p}}{\kappa_0}) \textbf{ ret } V) } 
+	      \cekstep
+	  \cek{ \ddagger }{ \emptyset }{ (\kappa \otimes \kappa_0 \textbf{ ret } V) }$$
 	
-	Boldface words are tags. Prompt marks the stack. Mark is removed after sub-evaluation terminates $\otimes$ operator copies the stack up to the next mark. $\ominus$ operator deletes the stack up the next mark.
-	
+	Boldface words are tags for a continuation. Prompt marks the stack. Mark is removed after sub-evaluation terminates $\oplus$ operator copies the stack up to the next mark. $\ominus$ operator deletes the stack up the next mark. $\otimes$ is stack append operator. \textbf{ret} continuation means subterm is done evaluating and value has been reached.
 	
 
 \end{enumerate}
 
 
+\subsection*{Prompt Usage Examples}
+\begin{enumerate}
+	\item closing files: $\lambda p \; f_{open}.(\textbf{begin} (\#(p \; f_{open})) (\textrm{close } f_{open}))$
+	above example is same as unwind-protect, but less complicated
+	\item interpreter: 
+\begin{verbatim}
+LOOP == (iterate L (exp (prompt-read ' ->))
+	        (if (eq? exp 'exit) 'good-bye
+	            (begin
+	              (# (evaluate exp base-environment))
+	              (L (prompt-read ' ->)))))
+\end{verbatim}
+If object language imports something like call/cc from implementation language, then entire interpreter could be aborted if call/cc appears in \texttt{exp}
+\end{enumerate}
 
 
 \section*{Control Delimiters and Their Hierarchies}%~\cite{Sitaram1990Hierarchies}
