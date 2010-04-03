@@ -23,6 +23,23 @@
 \newcommand{\appp}[2]{ \ensuremath{ (\app{#1}{#2}) } }
 \newcommand{\lam}[2]{ \ensuremath{ \lambda #1.#2 } }
 \newcommand{\lamp}[2]{ \ensuremath{ (\lam{#1}{#2}) } }
+\newcommand{\inhole}[2]{ \ensuremath{ #1[#2] } }
+
+\newcommand{\createop}[1]{\texttt{#1}\xspace}
+\newcommand{\createboldop}[1]{\textbf{#1}\xspace}
+
+\newcommand{\callcc}{\createop{call/cc}}
+\newcommand{\ctrl}{\createop{control}}
+\newcommand{\abort}{\createop{abort}}
+\newcommand{\prompt}{\createop{prompt}}
+\newcommand{\run}{\createop{run}}
+\newcommand{\throw}{\createop{throw}}
+\newcommand{\catch}{\createop{catch}}
+\newcommand{\addone}{\createop{add1}}
+\newcommand{\beginzero}{\createop{begin0}}
+
+\newcommand{\unwindprotect}{\createboldop{unwind-protect}}
+
 
 \begin{document}							% TWO LINES PLUS THE \end COMMAND AT
 															% THE END
@@ -33,21 +50,49 @@
 \date{4/13/2010}
 \maketitle
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% call/cc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{call/cc}
+\begin{enumerate}
+	\item call/cc applies its argument, which should be a function, to the current continuation, captured as a function continuation. If the captured continuation is ever applied, then it aborts whatever the continuation is at that time and replaces it with the captured continuation.
+	\item 
+	$$\inhole{E}{ \app{\callcc}{f} } \rightarrow \inhole{E}{ \app{f}{k} }$$
+	
+	where $k = \lam{v}{ \appp{ \abort }{ \inhole{E}{v} } }$ is the current continuation $E$ captured as a function and
+	
+	$$\inhole{E}{ \app{ \abort }{ V } } \rightarrow V$$
+	\item
+	$$\appp{ \addone }{ \appp{\callcc}{ \lam{k}{0} } } = 1$$
+	because the captured continuation was never applied so the current continuation is not aborted
+	
+	$$\appp{ \addone }{ \appp{\callcc}{ \lam{k}{ \appp{k}{\appp{k}{0}} } } } = 1$$
+	
+	because as soon as the inner $k$ is applied, the other application of $k$ is aborted
+\end{enumerate}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% History
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{History}
-
+non-delimited:
 \begin{enumerate}
-	\item LISP - catch and throw - not first class - can only throw once to each catch
-	\item LISP - errorset
 	\item call/cc
 	\item Landin's J
 	\item Reynolds - escape
 \end{enumerate}
 
+delimited:
+\begin{enumerate}
+	\item LISP - catch and throw - not first class - can only throw once to each catch
+	\item LISP - errset (mentioned in Sitaram and Felleisen)
+	\item Stoy and Strachey's run (= prompt) (in their experimental OS OS6) (mentioned in Sitaram and Felleisen)
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Friedman, Haynes - Constraining Control (1985 POPL)
+%% Haynes, Friedman - Embedding Continuations in Procedural Objects (1987 TOPLAS)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Constraining Control}%~\cite{Friedman1985ConstrainingControl}
 
 \begin{verbatim}
@@ -116,7 +161,7 @@ Continuations, when available as first-class objects, provide a general control 
 Why dont we need to restore old fluid-env when call/cc is done? Because call/cc aborts current continuation.
 \end{enumerate}
 
-\subsection*{Extending call/cc}
+\subsection*{Constraining call/cc}
 
 \begin{enumerate}
 	\item sometimes we want to constrain continuations - example - continuation that can only be invoked once
@@ -132,7 +177,7 @@ Why dont we need to restore old fluid-env when call/cc is done? Because call/cc 
                    (k v)
                  (error ...))))))))
 \end{verbatim}
-Of course, this example is not completely robust in that descendants of the continuation can still be invoked even if alive is false. To address this, we need a more complicated scheme where each continuation needs to keep track of all child continuations and be able to set all their alive flags to false. See paper for more info. For now we assume that this is not an issue.
+Of course, this example is not completely robust in that descendants of the continuation can still be invoked even if alive is false. To address this, we need a more complicated scheme where each continuation needs to keep track of all child continuations and be able to set all their alive flags to false. Sitaram and Felleisen call this solution a ``complicated communication system''. See paper for more info. For now we assume that this is not an issue.
 	\item another example of constrained continuation - may only want to allow continuation jump if we are in a certain context
 	\item can implement using fluid envs:
 \begin{verbatim}
@@ -151,6 +196,9 @@ Of course, this example is not completely robust in that descendants of the cont
 \end{enumerate}
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Felleisen - Theory and Practice of First-Class Prompts (1988 POPL)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{The Theory and Practice of First-Class Prompts}%~\cite{Felleisen1998Prompts}
 
 \begin{verbatim}
@@ -180,15 +228,15 @@ $$M ::= c \mid x \mid \lam{x}{M} \mid \app{M}{N} \mid \app{\F}{M}$$
 
 $\F$ operator is like call/cc - evaluates argument and then applies it to current continuation. The key difference is that $\F$ itself aborts the current continuation, instead of the current continuation itself being abortive. Therefore: 
 
-$$\appp{ add1 }{ \appp{ \F }{ \lamp{k}{ \appp{ k }{ \appp{k}{1} } }}} = 3$$
+$$\appp{ \addone }{ \appp{ \F }{ \lamp{k}{ \appp{ k }{ \appp{k}{1} } }}} = 3$$
  but 
-$$\appp{ add1 }{ \appp{ call/cc }{ \lamp{k}{ \appp{ k }{ \appp{k}{1} } }}} = 2$$
+$$\appp{ \addone }{ \appp{ \callcc }{ \lamp{k}{ \appp{ k }{ \appp{k}{1} } }}} = 2$$
 	
 and 
 
-$$\appp{ add1 }{ \appp{ \F }{ \lamp{k}{ 0 }}} = 0$$
+$$\appp{ \addone }{ \appp{ \F }{ \lamp{k}{ 0 }}} = 0$$
  but 
-$$\appp{ add1 }{ \appp{ call/cc }{ \lamp{k}{ 0 }}} = 1$$
+$$\appp{ \addone }{ \appp{ \callcc }{ \lamp{k}{ 0 }}} = 1$$
 
 	\item Notions of reduction for $\F$:
 	
@@ -213,7 +261,7 @@ What the rule is saying that the last context is just the identify context (a ho
 
 	$$\#_\F: (\# (\F M)) \rightarrow (\# (M (\lambda x.x)))$$
 	
-	However, now prompts are first class. They can appear anything in a term. This will prove to be quite useful.
+	However, now prompts are first class. They can appear anything in a term. This will prove to be quite useful. This is a key difference compared to the Haynes-Friedman method of constraining control.
 	
 	\item CEK machine transistions for $\F$ and \#:
 	
@@ -251,6 +299,10 @@ If object language imports something like call/cc from implementation language, 
 \end{enumerate}
 
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Sitaram, Felleisen - Control Delimiters and their Hierarchies (1990 HOSC)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Control Delimiters and Their Hierarchies}%~\cite{Sitaram1990Hierarchies}
 
 \begin{verbatim}
@@ -268,10 +320,73 @@ If object language imports something like call/cc from implementation language, 
 \subsection*{Abstract}
 Since control operators for the \textit{unrestricted} transfer of control are too powerful in many situations, we propose the \textit{control delimiter} as a means for restricting control manipulations and study its use in Lisp- and Scheme-like languages. In a Common Lisp-like setting, the concept of delimiting control provides a well-suited terminology for explaining different control constructs. For higher-order languages like Scheme, the control delimiter is the means for embedding Lisp control constructs faithfully and for realizing high-level control abstractions elegantly. A deeper analysis of the examples suggests a need for an entire \textit{control hierarchy} of such delimiters. We show how to implement such a hierarchy on top of the simple version of a control delimiter.
 
+\subsection*{\ctrl and \run}
+
+\begin{enumerate}
+	\item \ctrl operator in this paper = $\F$ operator from Felleisen 1998 (captures and uses non-abortive continuations, operator itself aborts the current continuation)
+	\item \callcc implemented using \ctrl:
+\begin{verbatim}
+(define (call/cc f)
+  (control (lambda (k)
+             (k (f (lambda (v) (abort (k v))))))))
+\end{verbatim}
+
+where $$\appp{ \abort }{ exp } \equiv \appp{ \ctrl }{ \lamp{dummy}{exp} }$$
+
+The outer application of the captured continuation $k$ is needed because \ctrl aborts its current continuation while \callcc does not. The \abort is needed because \callcc captures abortive continuations while \ctrl does not.
+
+	\item simulating \ctrl with \callcc is inefficient bc \ctrl is stack-based and \callcc is heap-based
+	\item Simulating \ctrl and \run with \callcc would requiring repackaging of the entire control stack into just portions of the control stack. In addition, we would need to keep track of specific points on the stack that are delimited. So complicated that Sitaram and Felleisen say in their paper ``skip this section on a first reading''
+\end{enumerate}
+
+\subsection*{implementing control operators with \ctrl and \run}
+\begin{enumerate}
+	\item \catch and \throw
+	$$\appp{ \throw }{ \app{ tag }{ value } } 
+	      \equiv
+	  \appp{ \abort }{ \appp{list}{ \app{'throw}{ \app{tag}{value} } } }$$
+	  
+	$$\appp{ \catch }{ \app{tag}{exp} }
+	      \equiv$$	
+	      
+\begin{verbatim}
+(let ([catch-tag tag] [result (% exp)])
+  (record-case result
+    ['throw (throw-tag throw-value)
+            (if (eq? throw-tag catch-tag) throw-value
+                (throw throw-tag throw-value))]
+    [else result]))])
+\end{verbatim}
 
 
 
+	\item \unwindprotect
+	
+	naive implementation:
+	$$\appp{ \unwindprotect }{ \app{body}{postlude} } 
+	      \equiv
+	  \appp{ \beginzero }{ \app{ \appp{\%}{body} }{ postlude } }$$
+	  
+	However, you may want to do things after the postlude, like when there's a throw/catch
+\end{enumerate}
 
+\subsection*{hierarchies}
+\begin{enumerate}
+	\item ``multiple uses of \ctrl and \run have the potential of interfering with each other''
+	
+	$$\appp{ \catch }{ \app{ 'k }{ \appp{list}{ \appp{\%}{ \appp{\addone}{ \appp{\throw}{ \app{'k}{6} } } } } } }$$
+	
+	delimiter does not allow throw to reach catch
+	\item ``most natural solution calls for matching pairs of \ctrl and \run $\ldots$ However, total independence between all pairs of \ctrl and \run is not always desirable''
+	\item proposal is to create hierarchy where each \ctrl and \run get a ``level'' and a ``prompt serves as control delimiter to all \ctrl of and above its level''
+	\item having a hierarchy also nicely protects the language from the programmer - language can still provide generic control operators to programmer but those operators will not conflict with already built-in language control operators
+	
+\end{enumerate}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Danvy, Filinski - Abstracting Control (1990 LFP)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Abstracting Control}%~\cite{Danvy1990AbstractingControl}
 
 \begin{verbatim}
