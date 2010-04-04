@@ -14,12 +14,16 @@
 \usepackage{amsmath}
 \usepackage{xspace}
 
+
 \newcommand{\F}{ \ensuremath{ \mathcal{F} } }
 \newcommand{\lamdavC}{ \ensuremath{ \lambda_v\!\!-\!\!C } }
 \newcommand{\cek}[3]{ \ensuremath{ \left\langle \; #1, \; #2, \; #3 \; \right\rangle } }
-\newcommand{\cekstep}{ \ensuremath{ \stackrel{CEK}{\longmapsto} } }
+\newcommand{\labeledstep}[1]{ \ensuremath{ \stackrel{#1}{\longmapsto} } }
+%\newcommand{\cekstep}{ \ensuremath{ \stackrel{CEK}{\longmapsto} } }
+\newcommand{\cekstep}{ \ensuremath{ \labeledstep{CEK} } }
 \newcommand{\clos}[2]{ \ensuremath{ \left\langle \; #1, \; #2 \; \right\rangle } }
 \newcommand{\app}[2]{ \ensuremath{ #1 \; #2 } }
+\newcommand{\apptwo}[3]{ \ensuremath{ #1 \; #2 \; #3 } }
 \newcommand{\appp}[2]{ \ensuremath{ (\app{#1}{#2}) } }
 \newcommand{\lam}[2]{ \ensuremath{ \lambda #1.#2 } }
 \newcommand{\lamp}[2]{ \ensuremath{ (\lam{#1}{#2}) } }
@@ -37,6 +41,27 @@
 \newcommand{\catch}{\createop{catch}}
 \newcommand{\addone}{\createop{add1}}
 \newcommand{\beginzero}{\createop{begin0}}
+
+\newcommand{\resettxt}[1]{ \ensuremath{ (\createop{reset} \; #1) } }
+\newcommand{\shifttxt}[2]{ \ensuremath{ (\createop{shift} \; #1 \; #2) } }
+\newcommand{\ctrltxt}[2]{ \ensuremath{ (\ctrl \; #1 \; #2) } }
+
+\newcommand{\CPSstep}{ \ensuremath{ \; \labeledstep{CPS} \; } }
+\newcommand{\cps}[1]{ \ensuremath{ \lam{\kappa}{#1} } }
+\newcommand{\cpstwo}[1]{ \ensuremath{ \lam{\kappa\gamma}{#1} } }
+\newcommand{\cpstrans}[1]{ \ensuremath{ \overline{#1} } }
+\newcommand{\doublecpstrans}[1]{ \ensuremath{ \cpstrans{\cpstrans{#1}} } }
+\newcommand{\shift}[2]{ \ensuremath{ \xi #1.#2 } }
+\newcommand{\reset}[1]{ \ensuremath{ \left\langle #1 \right\rangle } }
+\newcommand{\shiftp}[2]{ \ensuremath{ (\shift{#1}{#2}) } }
+\newcommand{\idcont}{ \ensuremath{ \lamp{x}{x} } }
+\newcommand{\idconttwo}{ \ensuremath{ \lamp{x\gamma'}{\app{\gamma'}{x}} } }
+
+\newcommand{\deno}[1]{ \ensuremath{ [\![ #1 ]\!] } }
+\newcommand{\eval}[3]{ \ensuremath{ \mathcal{E}\deno{#1} #2 #3 } }
+\newcommand{\evaldefault}[1]{ \ensuremath{ \eval{#1}{\rho}{\kappa} } }
+\newcommand{\evaltwo}[4]{ \ensuremath{ \mathcal{E}\deno{#1} #2 #3 #4 } }
+\newcommand{\evaltwodefault}[1]{ \ensuremath{ \eval{#1}{\rho}{\kappa}{\gamma} } }
 
 \newcommand{\unwindprotect}{\createboldop{unwind-protect}}
 
@@ -410,6 +435,89 @@ This approach preserves all the traditional results about CPS, e.g., its evaluat
 Besides presenting a new motivation for control operators, this paper also describes an improved conversion into applicative-order CPS. The conversion operates in one pass by performing all administrative reductions at translation time; interestingly, it can be expressed very concisely using the new control operators. The paper also presents some examples of nondeterministic programming in direct style.  
 
 
+\subsection*{Summary}
+
+
+\begin{enumerate}
+	\item iterating CPS transformations gives a natural hierarchy of delimited control operators - ``term is evaluated in a collection of embedded contexts, each represented by a continuation $\ldots$ essentially, this generalizes ordinary CPS to a hierarchy of continuations, one for each context''
+	\item since CPS is used, continuations are actually represented as functions (in Felleisen, they are only ``concatenable sequences of activation frames'')
+	\item ``replace the fundamentally dynamic control scoping specified by prior definitions of composable continuations with a properly static approach''
+	
+	\item standard CPS transform (overbar operator) (with shift and reset) 
+\begin{align*}
+\cpstrans{x}
+  &\CPSstep 
+\cps{ \app{\kappa}{x} } \\
+\cpstrans{\lam{x}{e}}
+  &\CPSstep 
+\cps{ \app{\kappa}{\lamp{x}{\cpstrans{e}}} } \\
+\cpstrans{\app{e_1}{e_2}} 
+  &\CPSstep 
+\cps{ \app{ \cpstrans{e_1} }
+          { \lamp{f}{ \app{ \cpstrans{e_2} }
+                          { \lamp{v}{ \app{f}{\app{v}{\kappa}} } } } } } \\
+\cpstrans{\shift{k}{e}}
+  &\CPSstep
+\cps{ \app{ \app{ \cpstrans{e} }{ \idcont } }
+          { [k \leftarrow \lam{v\kappa'}{\app{\kappa'}
+                                                     {\appp{\kappa}{v}}}] } } \\
+\cpstrans{\reset{e}}
+  &\CPSstep
+\cps{ \app{ \kappa }{ \appp{ \cpstrans{e} }
+                           { \idcont } } }
+\end{align*}
+
+	\item The composition of continuations in the $k$ of shift is what differentiates shift and control. In control dynamically manipulates continuation frames, and the the equivalent of the composition of continuations is the appending of (partial) stacks. Operationally:
+	
+\begin{align*}
+\inhole{ M }{ \resettxt{ \inhole{C}{\shifttxt{f}{e}} } } &\triangleright
+\inhole{ M }{ \resettxt{ e[f \leftarrow \lam{x}{\resettxt{\inhole{C}{x}}}]} } \\
+\inhole{ M }{ \resettxt{ \inhole{C}{\ctrltxt{f}{e}} } } &\triangleright
+\inhole{ M }{ \resettxt{ e[f \leftarrow \lam{x}{\inhole{C}{x}}]} } \\
+\end{align*}
+
+So
+\begin{verbatim}
+(reset (let ((y (shift f (cons 'a (f empty)))))
+         (shift g y))) --> '(a)
+\end{verbatim}
+ but
+\begin{verbatim}
+(reset (let ((y (control f (cons 'a (f empty)))))
+         (shift g y))) --> '()
+\end{verbatim}
+
+\item In regular denotational semantics, the shift and reset operators are:
+
+\begin{align*}
+\evaldefault{\shift{k}{e}} &= 
+\eval{e}{\rho[\deno{k} \leftarrow 
+              \lam{v\kappa'}
+                  {\app{\kappa'}
+                       {\appp{\kappa}{v}}}]}
+        {\idcont} \\
+\evaldefault{\reset{e}} &=
+\app{ \kappa }
+    { (\eval{e}{\rho}{\idcont}) }
+\end{align*}
+
+	\item in the translation of shift, there is a composition of continuations, but this results in a non-tail call. to fix this, we can apply CPS transformation again:
+	
+\begin{align*}
+\evaltwodefault{\shift{k}{e}} &= 
+\evaltwo{e}
+        {\rho[\deno{k} \leftarrow 
+              \lam{v\kappa'\gamma''}
+                  {\apptwo{\kappa}
+                          {v}
+                          {\lamp{w}{\apptwo{\kappa'}{w}{\gamma''}}}}]}
+        {\idconttwo}{\gamma} \\
+\evaltwodefault{\reset{e}} &=
+\evaltwo{e}{\rho}{\idconttwo}{\lamp{v}{\apptwo{\kappa}{v}{\gamma}}}
+\end{align*}
+
+ 
+\end{enumerate}
 
 
 
