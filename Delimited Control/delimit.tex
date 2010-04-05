@@ -22,8 +22,8 @@
 
 \title{Delimited Control}
 \author{Stephen Chang}
-\institute{}
-\date{4/13/2010}
+%\date{4/13/2010}
+\institute{4/13/2010}
 \maketitle
 
 \section*{Constraining Control}%~\cite{Friedman1985ConstrainingControl}
@@ -53,13 +53,13 @@
 
 \subsection*{Summary}
 
-Haynes and Friedman show how to extend continuations and call/cc by first capturing the continuation provided by call/cc in another lambda, which they call a ``continuation object (cob)'', before passing the cob to call/cc's argument. Capturing the continuation in a cob allows greater flexibility because additional operations can be performed before the continuation is invoked. Haynes and Friedman then present several useful programs that utilize cobs and call/cc variations implemented using cobs, with each program building on the previous one. 
+Haynes and Friedman show how to extend continuations and call/cc by first capturing the continuation provided by call/cc in another lambda, which they call a ``continuation object (cob)'', before passing the cob to call/cc's argument. Capturing the continuation in a cob allows greater flexibility because additional operations can be performed before the continuation is invoked. Haynes and Friedman present several useful programs that utilize both cobs and call/cc variations implemented using cobs, with each program building on the previous one. 
 
-First, cobs are used to implement fluid environments (dynamic binding), which are used to implement dynamic domains, which are finally used to implement \texttt{dynamic-wind}. The \texttt{dynamic-wind} operator is used when a programmer wants to guarantee that certain operations are executed when a specified block of code is entered and exited. One application of \texttt{dynamic-wind} is to ensure that file streams are always properly closed when they are no longer needed.
+First, cobs are used to implement fluid environments (dynamic binding), which are used to implement dynamic domains, which are finally used to implement \texttt{dynamic-wind}. The \texttt{dynamic-wind} operator is used when a programmer wants to guarantee that certain operations are executed when a specified block of code is entered or exited. One application of \texttt{dynamic-wind} is to ensure that file streams are always properly closed when they are no longer needed.
 
 \subsection*{Analysis}
 
-The primary conclusion of the paper is that continuations provided by call/cc must be properly harnessed and constrained in order to be useful. In the paper, cobs are used to accomplish this. However, the programs presented in the paper are rather inelegant and inefficient. The authors allude to this when they say that the paper ``emphasized semantics, while ignoring some security and efficiency issues.'' The more general problem seems to be that call/cc is ``too powerful'' because most applications do not need the entire rest of the program. A better control operator should give the programmer finer-grained access to a program's context.
+The primary conclusion of the paper is that continuations provided by call/cc must be properly harnessed and constrained in order to be useful. In the paper, cobs are used to accomplish this. However, the programs presented in the paper are rather inelegant and inefficient. The authors allude to this when they say that the paper ``emphasized semantics, while ignoring some security and efficiency issues.'' The more general problem seems to be that call/cc is ``too powerful'' because most applications do not need the entire remainder of the program. A better control operator should give the programmer finer-grained access to the program's context.
 
 
 \section*{The Theory and Practice of First-Class Prompts}%~\cite{Felleisen1998Prompts}
@@ -78,9 +78,9 @@ The primary conclusion of the paper is that continuations provided by call/cc mu
 %An analysis of the $\lambda_v$-C-calculus and its problematic relationship to operational equivalence leads to a new control facility: the prompt-application. With the introduction of prompt-applications, the control calculus becomes a traditional calculus all of whose equations imply operational equivalence. In addition, prompt-applications enhance the expressiveness and efficiency of the language. We illustrate the latter claim with examples from such distinct areas as systems programming and tree processing.
 
 \subsection*{Summary}
-It has been previously argued that call/cc does not give the programmer complete control over the program because it aborts the current continuation when the captured continuation is invoked~\cite{Felleisen1987SyntacticTheory}. To address this, Felleisen introduces the $\F$ operator, which is a variation of call/cc. $\F$ differs from call/cc in two ways. The first is that an application of $\F$ aborts the current continuation while an application of call/cc does not. Secondly, unlike call/cc, the continuations captured by $\F$ do not abort the current continuation when invoked. This gives the programmer finer-grained control over the continuation because continuations can be invoked multiple times, as well as composed. The $\F$ operator was previously introduced in Felleisen's $\lamdavC$ calculus.
+It has been previously argued that call/cc does not give the programmer complete control over the program because it aborts the current continuation when the captured continuation is invoked~\cite{Felleisen1987SyntacticTheory}. To address this, Felleisen introduces the $\F$ operator, which is a variation of call/cc. $\F$ differs from call/cc in two ways. The first is that an application of $\F$ aborts the current continuation while an application of call/cc does not. Secondly, unlike call/cc, the continuations captured by $\F$ do not abort the current continuation when invoked. This gives the programmer finer-grained control over the continuation because continuations can be invoked as many times as necessary, as well as composed. The $\F$ operator was previously introduced in Felleisen's $\lamdavC$ calculus.
 
-The problem with the $\lamdavC$ calculus is that an evaluator based on the calculus does not obey operational equivalence. To address this problem, Felleisen adds a first class prompt (\#) operator to the calculus that delimits the extent of the continuation captured by the $\F$ operator. With the prompt, expressions that are equal in the calculus behave equivalently in all contexts. Felleisen then derives an abstract machine from the new calculus, and also presents several programming applications of prompts, including a much simpler implementation of the \texttt{dynamic-wind} operator of Haynes and Friedman.
+The problem with the $\lamdavC$ calculus is that an evaluator based on the calculus does not obey operational equivalence. To address this problem, Felleisen adds a first-class prompt (\#) operator to the calculus that delimits the extent of the continuation captured by the $\F$ operator. With the prompt, expressions that are equal in the calculus behave equivalently in all contexts. Felleisen then derives an abstract machine from the new calculus, and also presents several programming applications of prompts, including a much simpler implementation of the \texttt{dynamic-wind} operator of Haynes and Friedman. Having first-class prompts in the language gives the programmer finer-grained control because 1) control operators can only capture context up to the nearest prompt delimiter, and 2) control actions can only erase context up to the nearest prompt delimiter.
 
 \subsection*{Analysis}
 
@@ -105,11 +105,11 @@ It seems that the initial motivation for adding first-class prompts to the calcu
 }
 \end{verbatim}
 
-\subsection*{Abstract}
-Since control operators for the \textit{unrestricted} transfer of control are too powerful in many situations, we propose the \textit{control delimiter} as a means for restricting control manipulations and study its use in Lisp- and Scheme-like languages. In a Common Lisp-like setting, the concept of delimiting control provides a well-suited terminology for explaining different control constructs. For higher-order languages like Scheme, the control delimiter is the means for embedding Lisp control constructs faithfully and for realizing high-level control abstractions elegantly. A deeper analysis of the examples suggests a need for an entire \textit{control hierarchy} of such delimiters. We show how to implement such a hierarchy on top of the simple version of a control delimiter.
+%\subsection*{Abstract}
+%Since control operators for the \textit{unrestricted} transfer of control are too powerful in many situations, we propose the \textit{control delimiter} as a means for restricting control manipulations and study its use in Lisp- and Scheme-like languages. In a Common Lisp-like setting, the concept of delimiting control provides a well-suited terminology for explaining different control constructs. For higher-order languages like Scheme, the control delimiter is the means for embedding Lisp control constructs faithfully and for realizing high-level control abstractions elegantly. A deeper analysis of the examples suggests a need for an entire \textit{control hierarchy} of such delimiters. We show how to implement such a hierarchy on top of the simple version of a control delimiter.
 
-
-
+\subsection*{Summary}
+A problem with Felleisen's $\F$ and \prompt operators is that multiple uses of the operators in a program may interfere with each other. This interference affects not only the correct behavior of a program, but is also a security issue because user-defined control operators may conflict with built-in constructs, thus crossing a programming language's abstraction boundary. After discussing $\F$ and \prompt (called \ctrl and \run this paper) and their relation to \callcc, as well as presenting several programming applications of \ctrl and \run, Sitaram and Felleisen suggest that the interference problem can be addressed by installing a hierarchy of control operators. Specifically, each \ctrl and \run is assigned a ``level'' and a \run delimits all \ctrl applications at or above its level. Therefore, operators with a higher level have less access to the program context. In this way, a language can protect its abstractions while still providing the programmer with general \ctrl and \run operators; it simply gives the programmer-level control operators a higher level. The authors add the qualification that their proposed scheme may not be ideal in every situation, but that any hierarchy of control operators would be beneficial in enhancing the robustness and security of a language.
 
 
 \section*{Abstracting Control}%~\cite{Danvy1990AbstractingControl}
@@ -125,15 +125,20 @@ Since control operators for the \textit{unrestricted} transfer of control are to
 \end{verbatim}
 
 
-\subsection*{Abstract}
-The last few years have seen a renewed interest in continuations for expressing advanced control structures in programming languages, and new models such as Abstract Continuations have been proposed to capture these dimensions. This article investigates an alternative formulation, exploiting the latent expressive power of the standard continuation-passing style (CPS) instead of introducing yet other new concepts. We build on a single foundation: abstracting control as a \textit{hierarchy} of continuations, each one modeling a specific language feature as acting on nested \textit{evaluation contexts}. 
+%\subsection*{Abstract}
+%The last few years have seen a renewed interest in continuations for expressing advanced control structures in programming languages, and new models such as Abstract Continuations have been proposed to capture these dimensions. This article investigates an alternative formulation, exploiting the latent expressive power of the standard continuation-passing style (CPS) instead of introducing yet other new concepts. We build on a single foundation: abstracting control as a \textit{hierarchy} of continuations, each one modeling a specific language feature as acting on nested \textit{evaluation contexts}. 
+%
+%We show how \textit{iterating} the continuation-passing conversion allows us to specify a wide range of control behavior. For example, two conversions yield an abstraction of Prolog-style backtracking. A number of other constructs can likewise be expressed in this framework; each is defined independently of the others, but all are arranged in a hierarchy making any interactions between them explicit. 
+%
+%This approach preserves all the traditional results about CPS, e.g., its evaluation order independence. Accordingly, our semantics is directly implementable in a call-by-value language such as Scheme or ML. Furthermore, because the control operators denote simple, typable lambda-terms in CPS, they themselves can be statically typed. Contrary to intuition, the iterated CPS transformation does not yield huge results: except where explicitly needed, all continuations beyond the first one disappear due to the extensionality principle ($\eta$-reduction). 
+%
+%Besides presenting a new motivation for control operators, this paper also describes an improved conversion into applicative-order CPS. The conversion operates in one pass by performing all administrative reductions at translation time; interestingly, it can be expressed very concisely using the new control operators. The paper also presents some examples of nondeterministic programming in direct style.  
 
-We show how \textit{iterating} the continuation-passing conversion allows us to specify a wide range of control behavior. For example, two conversions yield an abstraction of Prolog-style backtracking. A number of other constructs can likewise be expressed in this framework; each is defined independently of the others, but all are arranged in a hierarchy making any interactions between them explicit. 
+\subsection*{Summary}
 
-This approach preserves all the traditional results about CPS, e.g., its evaluation order independence. Accordingly, our semantics is directly implementable in a call-by-value language such as Scheme or ML. Furthermore, because the control operators denote simple, typable lambda-terms in CPS, they themselves can be statically typed. Contrary to intuition, the iterated CPS transformation does not yield huge results: except where explicitly needed, all continuations beyond the first one disappear due to the extensionality principle ($\eta$-reduction). 
+Danvy and Filinski show that a hierarchy of delimited contexts can be achieved by repeatedly iterating the standard CPS transformation on a programming language (to get what they call ``extended CPS''). They introduce the \shiftfn and \resetfn operators, which provide the programmer access to the program context. \shiftfn and \resetfn are comparable to the \ctrl and \prompt operators of Felleisen and Sitaram. Danvy and Filinski's approach differs from that of Felleisen in that the continuation captured by \shiftfn can be determined statically, while \ctrl captures a continuation up to the nearest dynamic \prompt. This allows the continuation captured by \shiftfn to be formally specified as a function, rather than a series of dynamic continuation frames.
 
-Besides presenting a new motivation for control operators, this paper also describes an improved conversion into applicative-order CPS. The conversion operates in one pass by performing all administrative reductions at translation time; interestingly, it can be expressed very concisely using the new control operators. The paper also presents some examples of nondeterministic programming in direct style.  
-
+The authors present a denotational semantics of a language that includes \shiftfn and \resetfn, as well as several applications of those control operators. One such application is implementing the CPS transformation metacircularly using the \shiftfn and \resetfn operators themselves. This implementation also improves the efficiency of the CPS conversion because it folds in several optimizations that were previously performed after the conversion.
 
 
 
