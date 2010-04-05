@@ -1,0 +1,49 @@
+\newcommand{\F}{ \ensuremath{ \mathcal{F} } }
+\newcommand{\lamdavC}{ \ensuremath{ \lambda_v\!\!-\!\!C } }
+\newcommand{\cek}[3]{ \ensuremath{ \left\langle \; #1, \; #2, \; #3 \; \right\rangle } }
+\newcommand{\labeledstep}[1]{ \ensuremath{ \stackrel{#1}{\longmapsto} } }
+%\newcommand{\cekstep}{ \ensuremath{ \stackrel{CEK}{\longmapsto} } }
+\newcommand{\cekstep}{ \ensuremath{ \labeledstep{CEK} } }
+\newcommand{\clos}[2]{ \ensuremath{ \left\langle \; #1, \; #2 \; \right\rangle } }
+\newcommand{\app}[2]{ \ensuremath{ #1 \; #2 } }
+\newcommand{\apptwo}[3]{ \ensuremath{ #1 \; #2 \; #3 } }
+\newcommand{\appp}[2]{ \ensuremath{ (\app{#1}{#2}) } }
+\newcommand{\lam}[2]{ \ensuremath{ \lambda #1.#2 } }
+\newcommand{\lamp}[2]{ \ensuremath{ (\lam{#1}{#2}) } }
+\newcommand{\inhole}[2]{ \ensuremath{ #1[#2] } }
+
+\newcommand{\createop}[1]{\texttt{#1}\xspace}
+\newcommand{\createboldop}[1]{\textbf{#1}\xspace}
+
+\newcommand{\callcc}{\createop{call/cc}}
+\newcommand{\ctrl}{\createop{control}}
+\newcommand{\abort}{\createop{abort}}
+\newcommand{\prompt}{\createop{prompt}}
+\newcommand{\run}{\createop{run}}
+\newcommand{\throw}{\createop{throw}}
+\newcommand{\catch}{\createop{catch}}
+\newcommand{\addone}{\createop{add1}}
+\newcommand{\beginzero}{\createop{begin0}}
+
+\newcommand{\resettxt}[1]{ \ensuremath{ (\createop{reset} \; #1) } }
+\newcommand{\shifttxt}[2]{ \ensuremath{ (\createop{shift} \; #1 \; #2) } }
+\newcommand{\ctrltxt}[2]{ \ensuremath{ (\ctrl \; #1 \; #2) } }
+
+\newcommand{\CPSstep}{ \ensuremath{ \; \labeledstep{CPS} \; } }
+\newcommand{\cps}[1]{ \ensuremath{ \lam{\kappa}{#1} } }
+\newcommand{\cpstwo}[1]{ \ensuremath{ \lam{\kappa\gamma}{#1} } }
+\newcommand{\cpstrans}[1]{ \ensuremath{ \overline{#1} } }
+\newcommand{\doublecpstrans}[1]{ \ensuremath{ \cpstrans{\cpstrans{#1}} } }
+\newcommand{\shift}[2]{ \ensuremath{ \xi #1.#2 } }
+\newcommand{\reset}[1]{ \ensuremath{ \left\langle #1 \right\rangle } }
+\newcommand{\shiftp}[2]{ \ensuremath{ (\shift{#1}{#2}) } }
+\newcommand{\idcont}{ \ensuremath{ \lamp{x}{x} } }
+\newcommand{\idconttwo}{ \ensuremath{ \lamp{x\gamma'}{\app{\gamma'}{x}} } }
+
+\newcommand{\deno}[1]{ \ensuremath{ [\![ #1 ]\!] } }
+\newcommand{\eval}[3]{ \ensuremath{ \mathcal{E}\deno{#1} #2 #3 } }
+\newcommand{\evaldefault}[1]{ \ensuremath{ \eval{#1}{\rho}{\kappa} } }
+\newcommand{\evaltwo}[4]{ \ensuremath{ \mathcal{E}\deno{#1} #2 #3 #4 } }
+\newcommand{\evaltwodefault}[1]{ \ensuremath{ \eval{#1}{\rho}{\kappa}{\gamma} } }
+
+\newcommand{\unwindprotect}{\createboldop{unwind-protect}}
