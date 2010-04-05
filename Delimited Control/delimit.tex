@@ -86,6 +86,8 @@ The problem with the $\lamdavC$ calculus is that an evaluator based on the calcu
 
 It seems that the initial motivation for adding first-class prompts to the calculus was to fix operational equivalence, and it wasn't realized until afterwards that prompts are a useful programming construct in their own right. The primary benefit of the $\F$ and prompt operators is that control can be constrained, but another benefit (compared to an operator like call/cc) is that captured continuations can be composed. Perhaps this is implied (because an invocation of a continuation in the abstract machine is just a stack append) but this does not seem to be explicitly stated in the paper.
 
+This is also an instance where studying a formal model of a language revealed an alternative ($\F$) to an existing construct (call/cc), as well as uncovered a new construct (prompts).
+
 
 
 
