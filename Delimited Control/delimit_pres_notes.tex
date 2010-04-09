@@ -16,61 +16,12 @@
 \usepackage{delimit}
 
 
-%\newcommand{\F}{ \ensuremath{ \mathcal{F} } }
-%\newcommand{\lamdavC}{ \ensuremath{ \lambda_v\!\!-\!\!C } }
-%\newcommand{\cek}[3]{ \ensuremath{ \left\langle \; #1, \; #2, \; #3 \; \right\rangle } }
-%\newcommand{\labeledstep}[1]{ \ensuremath{ \stackrel{#1}{\longmapsto} } }
-%%\newcommand{\cekstep}{ \ensuremath{ \stackrel{CEK}{\longmapsto} } }
-%\newcommand{\cekstep}{ \ensuremath{ \labeledstep{CEK} } }
-%\newcommand{\clos}[2]{ \ensuremath{ \left\langle \; #1, \; #2 \; \right\rangle } }
-%\newcommand{\app}[2]{ \ensuremath{ #1 \; #2 } }
-%\newcommand{\apptwo}[3]{ \ensuremath{ #1 \; #2 \; #3 } }
-%\newcommand{\appp}[2]{ \ensuremath{ (\app{#1}{#2}) } }
-%\newcommand{\lam}[2]{ \ensuremath{ \lambda #1.#2 } }
-%\newcommand{\lamp}[2]{ \ensuremath{ (\lam{#1}{#2}) } }
-%\newcommand{\inhole}[2]{ \ensuremath{ #1[#2] } }
-%
-%\newcommand{\createop}[1]{\texttt{#1}\xspace}
-%\newcommand{\createboldop}[1]{\textbf{#1}\xspace}
-%
-%\newcommand{\callcc}{\createop{call/cc}}
-%\newcommand{\ctrl}{\createop{control}}
-%\newcommand{\abort}{\createop{abort}}
-%\newcommand{\prompt}{\createop{prompt}}
-%\newcommand{\run}{\createop{run}}
-%\newcommand{\throw}{\createop{throw}}
-%\newcommand{\catch}{\createop{catch}}
-%\newcommand{\addone}{\createop{add1}}
-%\newcommand{\beginzero}{\createop{begin0}}
-%
-%\newcommand{\resettxt}[1]{ \ensuremath{ (\createop{reset} \; #1) } }
-%\newcommand{\shifttxt}[2]{ \ensuremath{ (\createop{shift} \; #1 \; #2) } }
-%\newcommand{\ctrltxt}[2]{ \ensuremath{ (\ctrl \; #1 \; #2) } }
-%
-%\newcommand{\CPSstep}{ \ensuremath{ \; \labeledstep{CPS} \; } }
-%\newcommand{\cps}[1]{ \ensuremath{ \lam{\kappa}{#1} } }
-%\newcommand{\cpstwo}[1]{ \ensuremath{ \lam{\kappa\gamma}{#1} } }
-%\newcommand{\cpstrans}[1]{ \ensuremath{ \overline{#1} } }
-%\newcommand{\doublecpstrans}[1]{ \ensuremath{ \cpstrans{\cpstrans{#1}} } }
-%\newcommand{\shift}[2]{ \ensuremath{ \xi #1.#2 } }
-%\newcommand{\reset}[1]{ \ensuremath{ \left\langle #1 \right\rangle } }
-%\newcommand{\shiftp}[2]{ \ensuremath{ (\shift{#1}{#2}) } }
-%\newcommand{\idcont}{ \ensuremath{ \lamp{x}{x} } }
-%\newcommand{\idconttwo}{ \ensuremath{ \lamp{x\gamma'}{\app{\gamma'}{x}} } }
-%
-%\newcommand{\deno}[1]{ \ensuremath{ [\![ #1 ]\!] } }
-%\newcommand{\eval}[3]{ \ensuremath{ \mathcal{E}\deno{#1} #2 #3 } }
-%\newcommand{\evaldefault}[1]{ \ensuremath{ \eval{#1}{\rho}{\kappa} } }
-%\newcommand{\evaltwo}[4]{ \ensuremath{ \mathcal{E}\deno{#1} #2 #3 #4 } }
-%\newcommand{\evaltwodefault}[1]{ \ensuremath{ \eval{#1}{\rho}{\kappa}{\gamma} } }
-%
-%\newcommand{\unwindprotect}{\createboldop{unwind-protect}}
 
 
 \begin{document}							% TWO LINES PLUS THE \end COMMAND AT
 															% THE END
 
-\title{Delimited Control - Presentation Outline}
+\title{Delimited Control - Presentation Notes}
 \author{Stephen Chang}
 \institute{}
 \date{4/13/2010}
@@ -80,65 +31,22 @@
 %% call/cc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{call/cc}
-\begin{enumerate}
-	\item call/cc applies its argument, which should be a function, to the current continuation, which is packaged as a first class function that consumes one argument. If the captured continuation is ever applied, then it aborts whatever the continuation is at that time and replaces it with the captured continuation.
-	\item 
-	$$\inhole{E}{ \app{\callcc}{f} } \rightarrow \inhole{E}{ \app{f}{k} }$$
-	
-	where $k = \lam{v}{ \appp{ \abort }{ \inhole{E}{v} } }$ is the current continuation $E$ captured as a function and
-	
-	$$\inhole{E}{ \app{ \abort }{ V } } \rightarrow V$$
-	\item
-	$$\appp{ \addone }{ \appp{\callcc}{ \lam{k}{0} } } = 1$$
-	because the captured continuation was never applied so the current continuation is not aborted
-	
-	$$\appp{ \addone }{ \appp{\callcc}{ \lam{k}{ \appp{k}{\appp{k}{0}} } } } = 1$$
-	
-	because as soon as the inner $k$ is applied, the other application of $k$ is aborted
-	
-	\item call/cc is useful because it is very general and can be used to implement a variety of other control operators, example: exception handling
-	
-\begin{verbatim}
-(define (f n)
-  (+ 10 (* 5 (/ 1 n))))
-\end{verbatim}
 
-Problem is that n may be 0.
+call/cc. Who here has seen it before? Who here is comfortable programming with it? Who here likes programming with it? Luckily for all of you, this presentation is not about call/cc. But it is relevant to my topic so I'm going to start with a review of call/cc.
 
-\begin{verbatim}
-(define (f n)
-  (+ 10 (* 5 
-    (call/cc
-      (lambda (k)
-        (if (zero? n)
-          (k 1)
-          (/ 1 n))))))
-\end{verbatim}
+\begin{itemize}
+	\item show semantics
+	\item show small examples
+\end{itemize}
 
-where \verb!k = (lambda (x) (+ 10 (* 5 x)))!
+As I mentioned, this talk is not about the merits of call/cc, so in this talk, I'm going to assume that call/cc is accepted as something that's useful to have in a programming language. call/cc is useful because it is a very general control operator that can be used to implement a variety of other control operators. What can you do with it?
 
-call/cc acts as the ``try'' block (in java terms) and the invocation of the continuation acts like the error handler.
+\begin{itemize}
+	\item show exception handling example
+\end{itemize}
 
-	\item problem with call/cc is that you only have ``partial control of the continuation'' because the continuation is abortive~\cite{Felleisen1987SyntacticTheory}
-\end{enumerate}
+For more complex call/cc examples, we can look at the paper Constraining Control, by Friedman and Haynes. In this paper Friedman and Haynes give several use cases for call/cc in which call/cc either needs to be extended or constrained.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% History
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{History}
-non-delimited:
-\begin{enumerate}
-	\item call/cc
-	\item Landin's J
-	\item Reynolds - escape
-\end{enumerate}
-
-delimited:
-\begin{enumerate}
-	\item LISP - catch and throw - not first class - can only throw once to each catch
-	\item LISP - errset (mentioned in Sitaram and Felleisen)
-	\item Stoy and Strachey's run (= prompt) (in their experimental OS OS6) (mentioned in Sitaram and Felleisen)
-\end{enumerate}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Friedman, Haynes - Constraining Control (1985 POPL)
@@ -146,105 +54,53 @@ delimited:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Constraining Control}%~\cite{Friedman1985ConstrainingControl}
 
-\begin{verbatim}
-@inproceedings{Friedman1985ConstrainingControl,
-  author    = {Daniel P. Friedman and Christopher T. Haynes},
-  title     = {Constraining Control},
-  booktitle = {POPL},
-  year      = {1985},
-  pages     = {245-254},
-}
-@article{Haynes1987EmbeddingContinuations,
-  author    = {Christopher T. Haynes and Daniel P. Friedman},
-  title     = {Embedding Continuations in Procedural Objects},
-  journal   = {ACM Trans. Program. Lang. Syst.},
-  volume    = {9},
-  number    = {4},
-  year      = {1987},
-  pages     = {582-598},
-}
-\end{verbatim}
+The paper starts with an implementation of a fluid environment. A fluid environment is used to achieve dynamic binding.
 
-\subsection*{Abstract}
-Continuations, when available as first-class objects, provide a general control abstraction in programming languages. They liberate the programmer from specific control structures, increasing programming language extensibility. Such continuations may be extended by embedding them in functional objects. This technique is first used to restore a fluid environment when a continuation object is invoked. We then consider techniques for constraining the power of continuations in the interest of security and efficiency. Domain mechanisms, which create dynamic barriers for enclosing control, are implemented using fluids. Domains are then used to implement an unwind-protect facility in the presence of first-class continuations. Finally, we demonstrate two mechanisms, wind-unwind and dynamic-wind, that generalize unwind-protect.
+\begin{itemize}
+	\item show fluid-let example
+\end{itemize}
 
-\subsection*{Extending call/cc}
+In a language, with call/cc, this implementation may not work all the time, for example, if a piece of code in the body jumps out of the body and into another fluid-let body, the proper environment will not be used. To fix this problem, we need to extend call/cc.
 
-\begin{enumerate}
-	\item extend call/cc - instead of passing current continuation to call/cc argument, pass closure that contains continuation - closure can also do other stuff
-\begin{verbatim}
-(define (call/cc-extended f)
-  (call/cc
-    (lambda (k)
-      (let ([cob (lambda (v)
-                  extra operations
-                  (k v))])
-        (f cob))))))
-\end{verbatim}
-	\item an extended call/cc is needed when implementing a fluid environment in a language with first class continuations
-	\item standard fluid env impl (== means syntactic extension):
-\begin{verbatim}
-(fluid <var>) == (fluid-env '<var>)
+\begin{itemize}
+	\item show call/cc-fluid example
+\end{itemize}
 
-(let-fluid <var> <exp> <body>) ==
+What we're doing is saving the fluid environment at the time the continuation was captured, and then installing this environment every time the captured continuation is invoked. We must extend the captured continuation to perform this installation and we achieve this by extending call/cc.
 
-(let ([own-env fluid-env] ; save previous fluid env
-      [v <exp>]
-      [body-thunk (lambda () <body>)]) ; don't want to eval body until new env is set
-  (set! fluid-env ; extend env
-    (lambda (x)
-      (if (eq? x '<var>) v (own-env x))))
-  (begin0
-    (body-thunk)
-    (set! fluid-env own-env)))
-\end{verbatim}
-	\item implementation above does not work with first class continuations - when continuation is invoked, it should continue in the same fluid env as when continuation was first captured
-	\item extended call/cc for correctly handling fluid envs:
-\begin{verbatim}
-(define (call/cc-fluid f)
-  (call/cc
-    (lambda (k)
-      (f (let ([own-env fluid-env]) ; capture env at the time continuation is created
-           (lambda (x)
-             (set! fluid-env own-env)
-             (k v)))))))
-\end{verbatim}
-Why dont we need to restore old fluid-env when call/cc is done? Because call/cc aborts current continuation.
-\end{enumerate}
+Now let's look at another example
 
-\subsection*{Constraining call/cc}
+\begin{itemize}
+	\item show call/cc-oneshot
+\end{itemize}
 
-\begin{enumerate}
-	\item sometimes we want to constrain continuations - example - continuation that can only be invoked once
-\begin{verbatim}
-(define (call/cc-one-shot f)
-  (call/cc
-    (lambda (k)
-      (f (let ([alive #t])
-           (lambda (v)
-             (if alive
-                 (begin
-                   (set! alive #f)
-                   (k v)
-                 (error ...))))))))
-\end{verbatim}
-Of course, this example is not completely robust in that descendants of the continuation can still be invoked even if alive is false. To address this, we need a more complicated scheme where each continuation needs to keep track of all child continuations and be able to set all their alive flags to false. Sitaram and Felleisen call this solution a ``complicated communication system''. See paper for more info. For now we assume that this is not an issue.
-	\item another example of constrained continuation - may only want to allow continuation jump if we are in a certain context
-	\item can implement using fluid envs:
-\begin{verbatim}
-(define (domain thunk)
-  (let-fluid domain-ref (unique) (thunk)))
-  
-(define (call/cc-domain f)
-  (call/cc-fluid
-    (lambda (k)
-      (f (let ([own-d (fluid domain-ref)]) ; save domain at cont creation
-           (lambda (v)
-             (if (eq? (fluid domain-ref own-d) ; check that we are in proper domain
-                 (k v)
-                 (error ...)))))))))
-\end{verbatim}
-\end{enumerate}
+
+From this example and the previous one, we can see a general pattern forming. Essentially, the captured continuation is itself captured in a lambda, where other operations are performed before the continuation is invoked.
+
+In this example, we are constraining the continuation captured by call/cc in that we only want to allow the captured continuation to be invoked once. A real world situation where this situation is applicable could be bank software where the captured continuations represent queued up banking transactions. However, there is a problem with this code. The problem is that if there is another continuation that overlaps with this one, then it's still possible for the code in this continuation to be executed more than once. For example, if you have a program E[M] where E = E1[E2[]], and both E and E1 are captured by calls to callcc, even though they are both ``one-shot'', E1 will still be executed twice.
+
+So now things are getting complicated. To fix this situation, the authors link related continuations so that when one is invoked, it can disable all continuations that are related. To do this, they need to implement a way to link the continuations, and also a protocol for continuations to send messages or commands to each other.
+
+At this point I'm going to conclude wrap up the presentation of this paper. What I wanted to demonstrate was that call/cc is useful but must be properly harnessed and doing so could be complicated. And we havent even tried to combine all these call/cc extensions. To wrap up, here are some more tools that the authors implement:
+
+\begin{itemize}
+	\item continuation linkages
+	\item continuation messaging
+	\item dynamic domains
+\end{itemize}
+
+Ultimately the authors utilize all these tools to implement an unwind-protect mechanism: (unwind-protect <body> <postlude>). unwind-protect guarantees that the code in the postlude will always be executed whenever either the body completes executing, or control leaves the body. It's useful for implementing cleanup, like closing files, or to perform other operations that ensure the system is in a stable state. The authors also generalize unwind-protect to dynamic-wind, which accepts an additional prelude parameter. The only reason for mentioning this is that we'll see it again later in the talk.
+
+Last observation, it seems that most non-trivial uses of call/cc require a heap (ie - set!).
+
+takeaways:
+\begin{itemize}
+	\item call/cc is useful but complicated to use
+	\item call/cc usually requires a heap to use
+	\item unwind-protect
+\end{itemize}
+
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -252,18 +108,22 @@ Of course, this example is not completely robust in that descendants of the cont
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{The Theory and Practice of First-Class Prompts}%~\cite{Felleisen1998Prompts}
 
-\begin{verbatim}
-@inproceedings{Felleisen1998Prompts,
-  author    = {Matthias Felleisen},
-  title     = {The Theory and Practice of First-Class Prompts},
-  booktitle = {POPL},
-  year      = {1988},
-  pages     = {180-190},
-}
-\end{verbatim}
+Since call/cc is difficult to use, some enterprising researchers thought, hey, maybe we should try to formalize this beast. And that brings us to my second paper. After working for a while, Felleisen came up with the $\lambda_v\!\!-\!\!C$ calculus, which is an extension of the call-by-value lambda calculus that includes a call/cc-like operator F. Felleisen used F instead of call/cc because it made the calculus nicer (less reduction rules).
 
-\subsection*{Abstract}
-An analysis of the $\lambda_v$-C-calculus and its problematic relationship to operational equivalence leads to a new control facility: the prompt-application. With the introduction of prompt-applications, the control calculus becomes a traditional calculus all of whose equations imply operational equivalence. In addition, prompt-applications enhance the expressiveness and efficiency of the language. We illustrate the latter claim with examples from such distinct areas as systems programming and tree processing.
+\begin{itemize}
+	\item introduce calculus
+	\item compare F to call/cc
+	\item show call/cc implemented with F
+\end{itemize}
+
+The problem with the calculus is that you can no longer reason locally about terms. For example, $\app{\F}{\lam{k}{0}}$ and 0 reduce to the same value, but not when placed in a non-empty context. To fix this, Felleisen added a prompt operator. The prompt delimits the continuation captured by $\F$.
+
+\begin{itemize}
+	\item introduce prompt extension to calculus and reduction rules
+	\item introduce abstract machine
+	\item show examples
+	\item show benefit of not needing heap
+\end{itemize}
 
 \subsection*{Summary}
 
