@@ -39,13 +39,13 @@ call/cc. Who here has seen it before? Who here is comfortable programming with i
 	\item show small examples
 \end{itemize}
 
-As I mentioned, this talk is not about the merits of call/cc, so in this talk, I'm going to assume that call/cc is accepted as something that's useful to have in a programming language. call/cc is useful because it is a very general control operator that can be used to implement a variety of other control operators. What can you do with it?
+As I mentioned, the focus of this talk is not call/cc, so in this talk, I'm going to assume that call/cc is accepted as something that's useful to have in a programming language. call/cc is useful because it is a very general control operator that can be used to implement a variety of other control operators. What can you do with it?
 
 \begin{itemize}
 	\item show exception handling example
 \end{itemize}
 
-For more complex call/cc examples, we can look at the paper Constraining Control, by Friedman and Haynes. In this paper Friedman and Haynes give several use cases for call/cc in which call/cc either needs to be extended or constrained.
+For more complicated call/cc examples, we turn to my first paper, by Friedman and Haynes. In this paper Friedman and Haynes give several use cases for call/cc. In this paper, we will see that while call/cc is a useful operator, some effort must be invested in order to get it working properly. In particular, call/cc is sometimes too powerful and must be either extended or constrained in order to work properly with other features of a language.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -75,13 +75,20 @@ Now let's look at another example
 \end{itemize}
 
 
-From this example and the previous one, we can see a general pattern forming. Essentially, the captured continuation is itself captured in a lambda, where other operations are performed before the continuation is invoked.
+In this example, we are constraining the continuation captured by call/cc in that we only want to allow the captured continuation to be invoked once. A real world application of this code could be bank software where the captured continuations represent queued up banking transactions. 
 
-In this example, we are constraining the continuation captured by call/cc in that we only want to allow the captured continuation to be invoked once. A real world situation where this situation is applicable could be bank software where the captured continuations represent queued up banking transactions. However, there is a problem with this code. The problem is that if there is another continuation that overlaps with this one, then it's still possible for the code in this continuation to be executed more than once. For example, if you have a program E[M] where E = E1[E2[]], and both E and E1 are captured by calls to callcc, even though they are both ``one-shot'', E1 will still be executed twice.
+From this example and the previous one, we can see a general pattern forming. Essentially, the captured continuation is itself captured in a lambda, where other operations are performed before the continuation is invoked. This pattern is one of the primary contributions of this paper. Friedman and Haynes call this extended continuation a continuation object.
 
-So now things are getting complicated. To fix this situation, the authors link related continuations so that when one is invoked, it can disable all continuations that are related. To do this, they need to implement a way to link the continuations, and also a protocol for continuations to send messages or commands to each other.
+Going back to call/cc-oneshot, there is a problem with this code. The problem is that if there is another continuation that overlaps with this one, then it's still possible for the code in this continuation to be executed more than once. For example, if you have a program E[M] where E = E1[E2[]], and both E and E1 are captured by calls to call/cc, even though they are both ``one-shot'', E1 will still be executed twice.
 
-At this point I'm going to conclude wrap up the presentation of this paper. What I wanted to demonstrate was that call/cc is useful but must be properly harnessed and doing so could be complicated. And we havent even tried to combine all these call/cc extensions. To wrap up, here are some more tools that the authors implement:
+To fix this situation, the authors implement two mechanisms. First they link related continuations so that each continuation knows about other continuations that potentially overlap with it. Secondly, they devise a communication protocol between continuations and use this message system to disable all continuations that share code with a continuation that is invoked.
+
+\begin{itemize}
+	\item continuation linkages
+	\item continuation messaging
+\end{itemize}
+
+So now things are getting a little complicated and I think this is a good point to wrap up my presentation of the paper. What I wanted to demonstrate was that call/cc is sometimes too powerful so it must be harnessed in order to be useful, but doing so is sometimes unwieldy. And so far we have only implemented single features. A language that has more than one of these features would need to combine all these call/cc extensions. To wrap up, here are some more tools that the authors implement:
 
 \begin{itemize}
 	\item continuation linkages
@@ -89,15 +96,15 @@ At this point I'm going to conclude wrap up the presentation of this paper. What
 	\item dynamic domains
 \end{itemize}
 
-Ultimately the authors utilize all these tools to implement an unwind-protect mechanism: (unwind-protect <body> <postlude>). unwind-protect guarantees that the code in the postlude will always be executed whenever either the body completes executing, or control leaves the body. It's useful for implementing cleanup, like closing files, or to perform other operations that ensure the system is in a stable state. The authors also generalize unwind-protect to dynamic-wind, which accepts an additional prelude parameter. The only reason for mentioning this is that we'll see it again later in the talk.
+Ultimately the authors utilize all these tools to implement an unwind-protect mechanism: (unwind-protect <body> <postlude>). unwind-protect guarantees that the code in the postlude will always be executed whenever either the body completes executing, or control leaves the body. It's useful for implementing cleanup, like closing files, or to perform other operations that ensure the system is in a stable state. unwind-protect also has a cousin named dynamic-wind, which accepts an additional prelude parameter. The reason I mention this is that we'll see it again later in the talk.
 
 Last observation, it seems that most non-trivial uses of call/cc require a heap (ie - set!).
 
 takeaways:
 \begin{itemize}
 	\item call/cc is useful but complicated to use
-	\item call/cc usually requires a heap to use
 	\item unwind-protect
+	\item call/cc usually requires a heap to use
 \end{itemize}
 
 
@@ -108,106 +115,53 @@ takeaways:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{The Theory and Practice of First-Class Prompts}%~\cite{Felleisen1998Prompts}
 
-Since call/cc is difficult to use, some enterprising researchers thought, hey, maybe we should try to formalize this beast. And that brings us to my second paper. After working for a while, Felleisen came up with the $\lambda_v\!\!-\!\!C$ calculus, which is an extension of the call-by-value lambda calculus that includes a call/cc-like operator F. Felleisen used F instead of call/cc because it made the calculus nicer (less reduction rules).
+So far we've seen that call/cc is difficult to use. Around the mid to late 80's, some enterprising researcher named Felleisen thought, hey, maybe we should try to formalize the behavior of this beast. And that brings us to my second paper. After working for a while, Felleisen came up with the $\lambda_v\!\!-\!\!C$ calculus, which is an extension of the call-by-value lambda calculus that includes a call/cc-like operator F. 
 
 \begin{itemize}
-	\item introduce calculus
-	\item compare F to call/cc
-	\item show call/cc implemented with F
+	\item introduce calculus - terms, evaluation contexts, $\F$ notions of reductions
 \end{itemize}
 
-The problem with the calculus is that you can no longer reason locally about terms. For example, $\app{\F}{\lam{k}{0}}$ and 0 reduce to the same value, but not when placed in a non-empty context. To fix this, Felleisen added a prompt operator. The prompt delimits the continuation captured by $\F$.
+The semantics of $\F$ is very similar to call/cc. $\F$ captures the current continuation as a function and applies its argument to it. These notions of reduction are doing this, one context frame at a time. The $\F$ operator is slowly getting pushed to the root of the term. The problem is that there is no way to get rid of the $\F$ operator. To address this, Felleisen adds a special computation rule that only applies in the empty context.
+
+\begin{itemize}
+	\item show special computation rule
+\end{itemize}
+
+So now that we have the special rule, we can use the following relation to reason about programs.
+
+\begin{itemize}
+	\item show $\Rightarrow$ relation
+\end{itemize}
+
+So I previously mentioned that we want to study call/cc, but now we are using this $\F$ operator instead. So let's compare it to call/cc.
+
+\begin{itemize}
+	\item compare $\F$ to call/cc
+	\item show call/cc implemented with $\F$
+\end{itemize}
+
+When asked why he used F instead of call/cc, the author said it was because it made the calculus nicer (less reduction rules).	
+
+
+The problem with the calculus is that you can no longer reason locally about terms. For example, $\app{\F}{\lam{k}{0}}$ and 0, when viewed as programs, reduce to the same value. But they do not behave the same way when placed in an arbitrary non-empty context. This is not ideal, so to fix this, Felleisen added a prompt operator \#. The prompt delimits the continuation captured by $\F$.
 
 \begin{itemize}
 	\item introduce prompt extension to calculus and reduction rules
+\end{itemize}
+
+With the special computation rule, it was as if we had an implicit \# at the root of the program. But now prompts are first class values that can appear anywhere.
+
+Felleisen also derives an abstract machine from the calculus. The machine that is presented is a variation of the CEK machine. Machine has 3 registers: control string, environment, and continuation. The continuation is just the evaluation contexts in a different representation. You can also call this the control stack of the program. Each control stack frame is has a tag so you can determine what kind it is. There is an additional \textbf{ret} continuation frame that indicates that a particular subterm has been reduced to a value.
+
+\begin{itemize}	
 	\item introduce abstract machine
-	\item show examples
+\end{itemize}
+
+\begin{itemize}	
+	\item show examples - interpreter, unwind-protect
 	\item show benefit of not needing heap
 \end{itemize}
 
-\subsection*{Summary}
-
-Prompts introduced to address problem with Felleisen's $\lambda_v\!\!-\!\!C$ calculus~\cite{Felleisen1987SyntacticTheory}
-	
-\subsection*{$\lamdavC$ calculus}
-
-\begin{enumerate}
-
-	\item $\lambda_v\!\!-\!\!C$ calculus terms:
-	
-$$M ::= c \mid x \mid \lam{x}{M} \mid \app{M}{N} \mid \app{\F}{M}$$
-
-$\F$ operator is like call/cc - evaluates argument and then applies it to current continuation. The key difference is that $\F$ itself aborts the current continuation, instead of the current continuation itself being abortive. Therefore: 
-
-$$\appp{ \addone }{ \appp{ \F }{ \lamp{k}{ \appp{ k }{ \appp{k}{1} } }}} = 3$$
- but 
-$$\appp{ \addone }{ \appp{ \callcc }{ \lamp{k}{ \appp{ k }{ \appp{k}{1} } }}} = 2$$
-	
-and 
-
-$$\appp{ \addone }{ \appp{ \F }{ \lamp{k}{ 0 }}} = 0$$
- but 
-$$\appp{ \addone }{ \appp{ \callcc }{ \lamp{k}{ 0 }}} = 1$$
-
-	\item Notions of reduction for $\F$:
-	
-	$$\F_L: (\F M) N \rightarrow \F (\lambda k.M (\lambda m.k (m N))))$$
-	$$\F_R: V (\F M) \rightarrow \F (\lambda K.M (\lambda m.k (V m))))$$
-
-``Purpose of these reductions is to push $\F$ to the root of a term and to encode the context of the $\F$ application as an abstraction. Essentially, the rules are building up the abstraction that represents the continuation one frame at a time.
-
-	\item
-
-Once the $\F$ reaches the root, then we can get rid of it with the rule:
-
-$$\F M \triangleright M (\lambda x.x)$$
-
-What the rule is saying that the last context is just the identify context (a hole).
-
-	\item However, the $\F$ elimination rule only applies when $\F$ is at the root and thus causes problems when trying to prove operational equivalence of the calculus because two terms that evaluate to the same value can behave differently when placed in the same context. Example: $\F (\lambda d.0)$ vs 0. First term aborts current context and evaluates to 0 while second one just evaluates to 0 in the current context.
-	
-	\item To fix the operational equivalent problem, a ``prompt'' operator \# is added to the calculus, along with an accompanying reduction rule:
-	
-	$$M ::= c \mid x \mid \lambda x.M \mid M N \mid \F M \mid \# M$$
-
-	$$\#_\F: (\# (\F M)) \rightarrow (\# (M (\lambda x.x)))$$
-	
-	However, now prompts are first class. They can appear anything in a term. This will prove to be quite useful. This is a key difference compared to the Haynes-Friedman method of constraining control.
-	
-	\item CEK machine transistions for $\F$ and \#:
-	
-	$$\cek{ \# M }{ \rho }{ \kappa } 
-	      \cekstep 
-	  \cek{ M }{ \rho }{ (\kappa \; \textbf{mark}) }$$
-	
-	$$\cek{ \F M }{ \rho }{ \kappa } 
-	      \cekstep 
-	  \cek{ M \gamma }{ \rho[\gamma := \clos{ \textbf{p} }{ \oplus \kappa }] }{ \ominus \kappa }$$
-	  
-	$$\cek{ \ddagger }{ \emptyset }{ ((\kappa \; \textbf{fun} \clos{\textbf{p}}{\kappa_0}) \textbf{ ret } V) } 
-	      \cekstep
-	  \cek{ \ddagger }{ \emptyset }{ (\kappa \otimes \kappa_0 \textbf{ ret } V) }$$
-	
-	Boldface words are tags for a continuation. Prompt marks the stack. Mark is removed after sub-evaluation terminates $\oplus$ operator copies the stack up to the next mark. $\ominus$ operator deletes the stack up the next mark. $\otimes$ is stack append operator. \textbf{ret} continuation means subterm is done evaluating and value has been reached.
-	
-
-\end{enumerate}
-
-
-\subsection*{Prompt Usage Examples}
-\begin{enumerate}
-	\item closing files: $\lambda p \; f_{open}.(\textbf{begin} (\#(p \; f_{open})) (\textrm{close } f_{open}))$
-	above example is same as unwind-protect, but less complicated
-	\item interpreter: 
-\begin{verbatim}
-LOOP == (iterate L (exp (prompt-read ' ->))
-	        (if (eq? exp 'exit) 'good-bye
-	            (begin
-	              (# (evaluate exp base-environment))
-	              (L (prompt-read ' ->)))))
-\end{verbatim}
-If object language imports something like call/cc from implementation language, then entire interpreter could be aborted if call/cc appears in \texttt{exp}
-\end{enumerate}
 
 
 
@@ -216,195 +170,49 @@ If object language imports something like call/cc from implementation language, 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Control Delimiters and Their Hierarchies}%~\cite{Sitaram1990Hierarchies}
 
-\begin{verbatim}
-@article{Sitaram1990Hierarchies,
-  author    = {Dorai Sitaram and Matthias Felleisen},
-  title     = {Control Delimiters and Their Hierarchies},
-  journal   = {Lisp and Symbolic Computation},
-  volume    = {3},
-  number    = {1},
-  year      = {1990},
-  pages     = {67-99},
-}
-\end{verbatim}
+Of course, this is a very naive implementation of unwind-protect. In the implementation of Friedman and Haynes, postlude was guaranteed to be executed whenever you jumped out of body. Here, postlude is guaranteed to be executed because you never allow jumps out of body. This indicates a larger problem, and that is that uses of these delimited control operators may conflict with each other. And that brings me to my third paper. For example, say we have catch and throw operators in our language.
 
-\subsection*{Abstract}
-Since control operators for the \textit{unrestricted} transfer of control are too powerful in many situations, we propose the \textit{control delimiter} as a means for restricting control manipulations and study its use in Lisp- and Scheme-like languages. In a Common Lisp-like setting, the concept of delimiting control provides a well-suited terminology for explaining different control constructs. For higher-order languages like Scheme, the control delimiter is the means for embedding Lisp control constructs faithfully and for realizing high-level control abstractions elegantly. A deeper analysis of the examples suggests a need for an entire \textit{control hierarchy} of such delimiters. We show how to implement such a hierarchy on top of the simple version of a control delimiter.
+\begin{itemize}	
+	\item show catch and throw example
+\end{itemize}
 
-\subsection*{\ctrl and \run}
+Now say that there is a catch around this unwind-protect and there is a throw in the body. Unfortunately, the throw will never reach the catch. Here we would have to extend unwind-protect to relay the throw but the general problem still remains.
 
-\begin{enumerate}
-	\item \ctrl operator in this paper = $\F$ operator from Felleisen 1998 (captures and uses non-abortive continuations, operator itself aborts the current continuation)
-	\item \callcc implemented using \ctrl:
-\begin{verbatim}
-(define (call/cc f)
-  (control (lambda (k)
-             (k (f (lambda (v) (abort (k v))))))))
-\end{verbatim}
+And the problem is worse than it seems. Say catch and throw were operators built into the language and say the language also wants to give the programmer access to these general delimited control operators, because they are useful, as we established earlier. Now say the programmer writes a piece of code that looks like (catch ... (\# ... throw ...)).
 
-where $$\appp{ \abort }{ exp } \equiv \appp{ \ctrl }{ \lamp{dummy}{exp} }$$
+Well now, the problem becomes a language safety issue because the abstractions of the language are revealed to the programmer.
 
-The outer application of the captured continuation $k$ is needed because \ctrl aborts its current continuation while \callcc does not. The \abort is needed because \callcc captures abortive continuations while \ctrl does not.
+One solution that seems like it could work is that you match up pairs of $\F$ and \# operators. This wont work so well because sometimes one delimiter is matched with many $\F$ operators.
 
-	\item simulating \ctrl with \callcc is inefficient bc \ctrl is stack-based and \callcc is heap-based
-	\item Simulating \ctrl and \run with \callcc would requiring repackaging of the entire control stack into just portions of the control stack. In addition, we would need to keep track of specific points on the stack that are delimited. So complicated that Sitaram and Felleisen say in their paper ``skip this section on a first reading''
-\end{enumerate}
-
-\subsection*{implementing control operators with \ctrl and \run}
-\begin{enumerate}
-	\item \catch and \throw
-	$$\appp{ \throw }{ \app{ tag }{ value } } 
-	      \equiv
-	  \appp{ \abort }{ \appp{list}{ \app{'throw}{ \app{tag}{value} } } }$$
-	  
-	$$\appp{ \catch }{ \app{tag}{exp} }
-	      \equiv$$	
-	      
-\begin{verbatim}
-(let ([catch-tag tag] [result (% exp)])
-  (record-case result
-    ['throw (throw-tag throw-value)
-            (if (eq? throw-tag catch-tag) throw-value
-                (throw throw-tag throw-value))]
-    [else result]))])
-\end{verbatim}
+More natural solution, and the one presented in the paper, is to introduce a hierarchy of control operators where each operator has a level. A delimiter delimits everything at or above its level. So the higher the level, the less access you have to the program context. Now we can give our language level operators a low level, and a user control operator a higher level and they wont conflict.
 
 
+A few more takeaways from this paper:
 
-	\item \unwindprotect
-	
-	naive implementation:
-	$$\appp{ \unwindprotect }{ \app{body}{postlude} } 
-	      \equiv
-	  \appp{ \beginzero }{ \app{ \appp{\%}{body} }{ postlude } }$$
-	  
-	However, you may want to do things after the postlude, like when there's a throw/catch
-\end{enumerate}
-
-\subsection*{hierarchies}
-\begin{enumerate}
-	\item ``multiple uses of \ctrl and \run have the potential of interfering with each other''
-	
-	$$\appp{ \catch }{ \app{ 'k }{ \appp{list}{ \appp{\%}{ \appp{\addone}{ \appp{\throw}{ \app{'k}{6} } } } } } }$$
-	
-	delimiter does not allow throw to reach catch
-	\item ``most natural solution calls for matching pairs of \ctrl and \run $\ldots$ However, total independence between all pairs of \ctrl and \run is not always desirable''
-	\item proposal is to create hierarchy where each \ctrl and \run get a ``level'' and a ``prompt serves as control delimiter to all \ctrl of and above its level''
-	\item having a hierarchy also nicely protects the language from the programmer - language can still provide generic control operators to programmer but those operators will not conflict with already built-in language control operators
-	
-\end{enumerate}
-
+\begin{itemize}
+	\item the authors show how to implement F using call/cc; looks similar to techniques of Friedmand and Haynes, ie really complicated - authors say not to read it on first pass through the paper
+	\item all solutions so far do not need a heap
+\end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Danvy, Filinski - Abstracting Control (1990 LFP)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Abstracting Control}%~\cite{Danvy1990AbstractingControl}
 
-\begin{verbatim}
-@inproceedings{Danvy1990AbstractingControl,
-  author    = {Olivier Danvy and Andrzej Filinski},
-  title     = {Abstracting Control},
-  booktitle = {LISP and Functional Programming},
-  year      = {1990},
-  pages     = {151-160},
-}
-\end{verbatim}
+Danvy and Filinski take the denotational approach to studying delimited control operators. Also, they show that they can use CPS transformations to get a hierarchy similar to Dorai and Felleisen, but while Dorai's hierarchy was somewhat ad-hoc, by repeated applying cps transformations, a natural hierarchy falls out.
+
+\begin{itemize}
+	\item recap standard CPS
+	\item give deno for shift and reset
+	\item perform 2nd CPS on shift and reset
+	\item compare shift to $\F$
+\end{itemize}
+
+Danvy and Filinski also present a nifty application where they implement the CPS using shift and reset. Not only do they get a (metacircular) CPS transform, they get a bunch of cleanup operations as well without having to do a separate pass.
+
 
 
 \subsection*{Abstract}
-The last few years have seen a renewed interest in continuations for expressing advanced control structures in programming languages, and new models such as Abstract Continuations have been proposed to capture these dimensions. This article investigates an alternative formulation, exploiting the latent expressive power of the standard continuation-passing style (CPS) instead of introducing yet other new concepts. We build on a single foundation: abstracting control as a \textit{hierarchy} of continuations, each one modeling a specific language feature as acting on nested \textit{evaluation contexts}. 
-
-We show how \textit{iterating} the continuation-passing conversion allows us to specify a wide range of control behavior. For example, two conversions yield an abstraction of Prolog-style backtracking. A number of other constructs can likewise be expressed in this framework; each is defined independently of the others, but all are arranged in a hierarchy making any interactions between them explicit. 
-
-This approach preserves all the traditional results about CPS, e.g., its evaluation order independence. Accordingly, our semantics is directly implementable in a call-by-value language such as Scheme or ML. Furthermore, because the control operators denote simple, typable lambda-terms in CPS, they themselves can be statically typed. Contrary to intuition, the iterated CPS transformation does not yield huge results: except where explicitly needed, all continuations beyond the first one disappear due to the extensionality principle ($\eta$-reduction). 
-
-Besides presenting a new motivation for control operators, this paper also describes an improved conversion into applicative-order CPS. The conversion operates in one pass by performing all administrative reductions at translation time; interestingly, it can be expressed very concisely using the new control operators. The paper also presents some examples of nondeterministic programming in direct style.  
-
-
-\subsection*{Summary}
-
-
-\begin{enumerate}
-	\item iterating CPS transformations gives a natural hierarchy of delimited control operators - ``term is evaluated in a collection of embedded contexts, each represented by a continuation $\ldots$ essentially, this generalizes ordinary CPS to a hierarchy of continuations, one for each context''
-	\item since CPS is used, continuations are actually represented as functions (in Felleisen, they are only ``concatenable sequences of activation frames'')
-	\item ``replace the fundamentally dynamic control scoping specified by prior definitions of composable continuations with a properly static approach''
-	
-	\item standard CPS transform (overbar operator) (with shift and reset) 
-\begin{align*}
-\cpstrans{x}
-  &\CPSstep 
-\cps{ \app{\kappa}{x} } \\
-\cpstrans{\lam{x}{e}}
-  &\CPSstep 
-\cps{ \app{\kappa}{\lamp{x}{\cpstrans{e}}} } \\
-\cpstrans{\app{e_1}{e_2}} 
-  &\CPSstep 
-\cps{ \app{ \cpstrans{e_1} }
-          { \lamp{f}{ \app{ \cpstrans{e_2} }
-                          { \lamp{v}{ \app{f}{\app{v}{\kappa}} } } } } } \\
-\cpstrans{\shift{k}{e}}
-  &\CPSstep
-\cps{ \app{ \app{ \cpstrans{e} }{ \idcont } }
-          { [k \leftarrow \lam{v\kappa'}{\app{\kappa'}
-                                                     {\appp{\kappa}{v}}}] } } \\
-\cpstrans{\reset{e}}
-  &\CPSstep
-\cps{ \app{ \kappa }{ \appp{ \cpstrans{e} }
-                           { \idcont } } }
-\end{align*}
-
-	\item The composition of continuations in the $k$ of shift is what differentiates shift and control. In control dynamically manipulates continuation frames, and the the equivalent of the composition of continuations is the appending of (partial) stacks. Operationally:
-	
-\begin{align*}
-\inhole{ M }{ \resettxt{ \inhole{C}{\shifttxt{f}{e}} } } &\triangleright
-\inhole{ M }{ \resettxt{ e[f \leftarrow \lam{x}{\resettxt{\inhole{C}{x}}}]} } \\
-\inhole{ M }{ \resettxt{ \inhole{C}{\ctrltxt{f}{e}} } } &\triangleright
-\inhole{ M }{ \resettxt{ e[f \leftarrow \lam{x}{\inhole{C}{x}}]} } \\
-\end{align*}
-
-So
-\begin{verbatim}
-(reset (let ((y (shift f (cons 'a (f empty)))))
-         (shift g y))) --> '(a)
-\end{verbatim}
- but
-\begin{verbatim}
-(reset (let ((y (control f (cons 'a (f empty)))))
-         (shift g y))) --> '()
-\end{verbatim}
-
-\item In regular denotational semantics, the shift and reset operators are:
-
-\begin{align*}
-\evaldefault{\shift{k}{e}} &= 
-\eval{e}{\rho[\deno{k} \leftarrow 
-              \lam{v\kappa'}
-                  {\app{\kappa'}
-                       {\appp{\kappa}{v}}}]}
-        {\idcont} \\
-\evaldefault{\reset{e}} &=
-\app{ \kappa }
-    { (\eval{e}{\rho}{\idcont}) }
-\end{align*}
-
-	\item in the translation of shift, there is a composition of continuations, but this results in a non-tail call. to fix this, we can apply CPS transformation again:
-	
-\begin{align*}
-\evaltwodefault{\shift{k}{e}} &= 
-\evaltwo{e}
-        {\rho[\deno{k} \leftarrow 
-              \lam{v\kappa'\gamma''}
-                  {\apptwo{\kappa}
-                          {v}
-                          {\lamp{w}{\apptwo{\kappa'}{w}{\gamma''}}}}]}
-        {\idconttwo}{\gamma} \\
-\evaltwodefault{\reset{e}} &=
-\evaltwo{e}{\rho}{\idconttwo}{\lamp{v}{\apptwo{\kappa}{v}{\gamma}}}
-\end{align*}
-
- 
-\end{enumerate}
-
 
 
 
