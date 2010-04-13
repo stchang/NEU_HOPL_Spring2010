@@ -82,7 +82,9 @@ In this paper, Felleisen extends his $\lambdavC$ calculus ($\lambdavC$ is $\lamb
 
 \subsection*{Analysis}
 
-It seems that the initial motivation for adding explicit prompts to the calculus was to fix operational equivalence, and it wasn't realized until afterwards that prompts are a useful programming construct in their own right. The primary benefit of the $\F$ and prompt operators is that control can be constrained, but another benefit (compared to an operator like call/cc) is that captured continuations can be composed. Perhaps this is implied (because an invocation of a continuation in the abstract machine is just a stack append) but this does not seem to be explicitly stated in the paper. This paper is also an example that supports the study of formal language models. The $\lambdavC$ revealed an alternative ($\F$) to an existing construct (call/cc), as well as uncovered a new control construct (prompts).
+It seems that the initial motivation for adding explicit prompts to the calculus was to fix operational equivalence, and it wasn't realized until afterwards that prompts are a useful programming construct in their own right. The primary benefit of the $\F$ and prompt operators is that control can be constrained, but another benefit (compared to an operator like call/cc) is that captured continuations can be composed. Perhaps this is implied (because an invocation of a continuation in the abstract machine is just a stack append) but this does not seem to be explicitly stated in the paper. 
+
+This paper is an example supporting the study of formal language models. The $\lambdavC$ calculus revealed an alternative ($\F$) to an existing construct (call/cc), as well as uncovered a new control construct (prompts).
 
 
 
